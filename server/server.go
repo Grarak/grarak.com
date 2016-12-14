@@ -49,7 +49,8 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
 			for _, contentType := range supportedContentTypes {
 				for i := 1; i < len(contentType); i++ {
 					var extension string = contentType[i]
-					if url[len(url)-len(extension):] == extension {
+					if len(url) > len(extension) &&
+						url[len(url)-len(extension):] == extension {
 						response.SetContentType(contentType[0])
 						break typesLoop
 					}
