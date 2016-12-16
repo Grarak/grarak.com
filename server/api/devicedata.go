@@ -81,8 +81,7 @@ func (dData *DeviceData) GetDevices() map[string]DeviceInfo {
 		utils.Panic(err)
 
 		var data map[string]interface{}
-		var b []byte
-		err = json.Unmarshal(b, &data)
+		err = json.Unmarshal([]byte(j), &data)
 		utils.Panic(err)
 
 		deviceInfos[id] = NewDeviceInfo(data)
