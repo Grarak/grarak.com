@@ -60,10 +60,17 @@ func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 				utils.LogI(KA_TAG, fmt.Sprintf("New request %s %s %s",
 					kaAPi.client.Method, kaAPi.version, kaAPi.path))
 
-				kaAPi.putDatabase(dInfo)
-
+				var updated bool = kaAPi.putDatabase(dInfo)
 				if b, err := kaAPi.createStatus(true); err == nil {
 					response = kaAPi.client.ResponseBody(string(b))
+				}
+
+				if updated {
+					utils.LogI(KA_TAG, fmt.Sprintf("Updating device %s from %s",
+						dInfo.Model, kaAPi.client.IPAddr))
+				} else {
+					utils.LogI(KA_TAG, fmt.Sprintf("Inserting device %s from %s",
+						dInfo.Model, kaAPi.client.IPAddr))
 				}
 			}
 		}
@@ -75,10 +82,7 @@ func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 			response = kaAPi.client.ResponseBody(string(b))
 		}
 	}
-
-	if response != nil {
-		response.SetContentType(miniserver.ContentJson)
-	}
+	response.SetContentType(miniserver.ContentJson)
 
 	return response
 }
@@ -149,10 +153,12 @@ func (dInfo DeviceInfo) Json() ([]byte, error) {
 	return json.Marshal(dInfo)
 }
 
-func (kaApi KernelAdiutorApi) putDatabase(dInfo DeviceInfo) {
-	if _, exists := kaApi.deviceInfos[dInfo.AndroidID]; exists {
+func (kaApi KernelAdiutorApi) putDatabase(dInfo DeviceInfo) bool {
+	_, exists := kaApi.deviceInfos[dInfo.AndroidID]
+	if exists {
 		kaApi.devicedata.Update(dInfo, kaApi.deviceInfos)
 	} else {
 		kaApi.devicedata.Insert(dInfo, kaApi.deviceInfos)
 	}
+	return exists
 }

@@ -25,6 +25,8 @@ func NewServer(port int) *MiniServer {
 
 func (miniserver *MiniServer) StartListening(callback func(client *Client) *Response) {
 	http.HandleFunc("/", func(response http.ResponseWriter, request *http.Request) {
+		defer request.Body.Close()
+
 		request.ParseForm()
 		var client *Client = newClient(request)
 
