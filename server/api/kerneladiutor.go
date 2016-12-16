@@ -57,20 +57,15 @@ func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 			var dInfo DeviceInfo = NewDeviceInfo(data)
 			if dInfo.valid() {
 
-				utils.LogI(KA_TAG, fmt.Sprintf("New request %s %s %s",
-					kaAPi.client.Method, kaAPi.version, kaAPi.path))
-
 				var updated bool = kaAPi.putDatabase(dInfo)
 				if b, err := kaAPi.createStatus(true); err == nil {
 					response = kaAPi.client.ResponseBody(string(b))
 				}
 
 				if updated {
-					utils.LogI(KA_TAG, fmt.Sprintf("Updating device %s from %s",
-						dInfo.Model, kaAPi.client.IPAddr))
+					utils.LogI(KA_TAG, fmt.Sprintf("Updating device %s", dInfo.Model))
 				} else {
-					utils.LogI(KA_TAG, fmt.Sprintf("Inserting device %s from %s",
-						dInfo.Model, kaAPi.client.IPAddr))
+					utils.LogI(KA_TAG, fmt.Sprintf("Inserting device %s", dInfo.Model))
 				}
 			}
 		}

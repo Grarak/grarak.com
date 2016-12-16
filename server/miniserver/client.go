@@ -6,9 +6,9 @@ import (
 )
 
 type Client struct {
-	Url, Method, IPAddr string
-	Request             []byte
-	Queries             map[string][]string
+	Url, Method string
+	Request     []byte
+	Queries     map[string][]string
 }
 
 func newClient(request *http.Request) *Client {
@@ -27,7 +27,6 @@ func newClient(request *http.Request) *Client {
 	return &Client{
 		Url:     request.URL.Path,
 		Method:  request.Method,
-		IPAddr:  request.Referer(),
 		Request: body,
 		Queries: request.Form,
 	}
