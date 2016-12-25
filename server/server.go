@@ -18,7 +18,6 @@ var supportedContentTypes [][]string = [][]string{
 }
 
 var deviceData *api.DeviceData
-var deviceInfos map[string]api.DeviceInfo
 
 func onConnect(client *miniserver.Client) *miniserver.Response {
 	var response *miniserver.Response
@@ -68,8 +67,7 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
 
 			if urls[0] == "kerneladiutor" {
 				resApi = api.NewKernelAdiutorApi(client,
-					strings.Join(urls[3:], "/"), urls[2],
-					deviceData, deviceInfos)
+					strings.Join(urls[3:], "/"), urls[2], deviceData)
 			}
 
 			if resApi != nil {
@@ -92,10 +90,6 @@ func StartServer() {
 
 	deviceData = api.NewDeviceData()
 	if deviceData == nil {
-		panic("Can't open devicedate db")
-	}
-	deviceInfos = deviceData.GetDevices()
-	if deviceInfos == nil {
 		panic("Can't open devicedate db")
 	}
 

@@ -1,6 +1,9 @@
 package utils
 
-import "os"
+import (
+	"encoding/base64"
+	"os"
+)
 
 func StringEmpty(text string) bool {
 	return len(text) == 0
@@ -25,37 +28,42 @@ func (j Json) GetString(key string) string {
 }
 
 func (j Json) GetStringArray(key string) []string {
-	if d, ok := j.Data[key]; ok {
-		if d, ok := d.([]interface{}); ok {
-			array := make([]string, 0)
-			for _, value := range d {
-				if d, ok := value.(string); ok {
-					array = append(array, d)
-				} else {
-					return nil
-				}
+	if d, ok := j.GetArray(key); ok {
+		array := make([]string, 0)
+		for _, value := range d {
+			if d, ok := value.(string); ok {
+				array = append(array, d)
+			} else {
+				return nil
 			}
-			return array
 		}
+		return array
 	}
 	return nil
 }
 
 func (j Json) GetFloatArray(key string) []float64 {
-	if d, ok := j.Data[key]; ok {
-		if d, ok := d.([]interface{}); ok {
-			array := make([]float64, 0)
-			for _, value := range d {
-				if d, ok := value.(float64); ok {
-					array = append(array, d)
-				} else {
-					return nil
-				}
+	if d, ok := j.GetArray(key); ok {
+		array := make([]float64, 0)
+		for _, value := range d {
+			if d, ok := value.(float64); ok {
+				array = append(array, d)
+			} else {
+				return nil
 			}
-			return array
 		}
+		return array
 	}
 	return nil
+}
+
+func (j Json) GetArray(key string) ([]interface{}, bool) {
+	if d, ok := j.Data[key]; ok {
+		if d, ok := d.([]interface{}); ok {
+			return d, true
+		}
+	}
+	return nil, false
 }
 
 func (j Json) GetFloat(key string) float64 {
@@ -71,4 +79,30 @@ func Panic(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func GetAverage(array []float64) float64 {
+	var sum float64 = 0
+
+	for _, i := range array {
+		sum += i
+	}
+	sum /= float64(len(array))
+
+	return sum
+}
+
+func ReverseStringArray(array []string) {
+	var length int = len(array)
+	for i := 0; i < length/2; i++ {
+		array[i], array[length-1-i] = array[length-1-i], array[i]
+	}
+}
+
+func Encode(text string) string {
+	return base64.StdEncoding.EncodeToString([]byte(text))
+}
+
+func Decode(text string) ([]byte, error) {
+	return base64.StdEncoding.DecodeString(text)
 }
