@@ -96,21 +96,22 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
 func (dData *DeviceData) getDevices() map[string]*DeviceInfo {
 	deviceInfos := make(map[string]*DeviceInfo)
 
-	query, err := dData.db.Query("select id, json from devices")
+	query, err := dData.db.Query("select json from devices")
 	utils.Panic(err)
 	defer query.Close()
 
 	for query.Next() {
-		var id string
 		var j string
-		err := query.Scan(&id, &j)
+		err := query.Scan(&j)
 		utils.Panic(err)
 
 		var data map[string]interface{}
 		err = json.Unmarshal([]byte(j), &data)
 		utils.Panic(err)
 
-		deviceInfos[id] = NewDeviceInfo(data)
+		if dInfo := NewDeviceInfo(data); dInfo.valid() {
+			deviceInfos[dInfo.AndroidID] = dInfo
+		}
 	}
 	err = query.Err()
 	utils.Panic(err)
@@ -134,7 +135,6 @@ func (dData *DeviceData) _sortScores(low, high int) {
 	var pivot float64 = data[list[middle]].Score
 
 	var i, j int = low, high
-
 	for i <= j {
 		for data[list[i]].Score < pivot {
 			i++
