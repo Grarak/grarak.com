@@ -95,7 +95,6 @@ func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 						response = kaAPi.client.ResponseBody(string(b))
 					}
 				}
-			} else {
 			}
 		}
 
