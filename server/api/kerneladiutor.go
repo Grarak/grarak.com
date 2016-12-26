@@ -127,7 +127,7 @@ func (kaApi KernelAdiutorApi) createStatus(success bool) ([]byte, error) {
 }
 
 type DeviceInfo struct {
-	ID             string    `json:"id,omitempty"`
+	ID             string    `json:"id"`
 	AndroidID      string    `json:"android_id,omitempty"`
 	AndroidVersion string    `json:"android_version"`
 	KernelVersion  string    `json:"kernel_version"`
@@ -185,7 +185,7 @@ func (dInfo DeviceInfo) valid() bool {
 		!utils.StringEmpty(dInfo.Model) && dInfo.Model != "unknown" &&
 		!utils.StringEmpty(dInfo.Vendor) &&
 		dInfo.Commands != nil && len(dInfo.Commands) >= 10 &&
-		dInfo.Times != nil && len(dInfo.Times) >= 15 &&
+		dInfo.Times != nil && len(dInfo.Times) >= 20 &&
 		dInfo.Cpu != 0
 }
 

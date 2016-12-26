@@ -8,6 +8,8 @@ import (
 
 	"sync"
 
+	"time"
+
 	"../utils"
 )
 
@@ -15,7 +17,9 @@ type DeviceData struct {
 	db           *sql.DB
 	infos        map[string]*DeviceInfo
 	sortedScores []string
-	mutex        sync.Mutex
+
+	newdevices []*DeviceInfo
+	mutex      sync.Mutex
 }
 
 func NewDeviceData() *DeviceData {
@@ -30,7 +34,8 @@ func NewDeviceData() *DeviceData {
 	}
 
 	var dData *DeviceData = &DeviceData{
-		db: db,
+		db:         db,
+		newdevices: make([]*DeviceInfo, 0),
 	}
 	dData.infos = dData.getDevices()
 
@@ -40,20 +45,27 @@ func NewDeviceData() *DeviceData {
 	}
 	dData.sortScores()
 
+	go func() {
+		for {
+			time.Sleep(time.Second / 3)
+
+			if len(dData.newdevices) > 0 {
+				var id string = dData.newdevices[0].AndroidID
+				if _, ok := dData.infos[id]; !ok {
+					dData.sortedScores = append(dData.sortedScores, id)
+					dData.infos[id] = dData.newdevices[0]
+				}
+				dData.sortScores()
+				dData.newdevices = dData.newdevices[1:]
+			}
+		}
+	}()
+
 	return dData
 }
 
 func (dData *DeviceData) updateSortedScores(dInfo *DeviceInfo, insert bool) {
-
-	dData.infos[dInfo.AndroidID] = dInfo
-
-	dData.mutex.Lock()
-	defer dData.mutex.Unlock()
-
-	if insert {
-		dData.sortedScores = append(dData.sortedScores, dInfo.AndroidID)
-	}
-	dData.sortScores()
+	dData.newdevices = append(dData.newdevices, dInfo)
 }
 
 func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
@@ -66,8 +78,6 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
 	utils.Panic(err)
 
 	var stmt *sql.Stmt
-	defer stmt.Close()
-
 	if _, ok := dData.infos[dInfo.AndroidID]; ok {
 		updated = true
 
@@ -85,11 +95,12 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
 		_, err = stmt.Exec(dInfo.AndroidID, string(j))
 		utils.Panic(err)
 	}
+	defer stmt.Close()
 
 	err = trans.Commit()
 	utils.Panic(err)
 
-	dData.updateSortedScores(dInfo, updated)
+	dData.updateSortedScores(dInfo, !updated)
 	return updated
 }
 
