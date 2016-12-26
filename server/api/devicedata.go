@@ -6,8 +6,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"sync"
-
 	"time"
 
 	"../utils"
@@ -19,7 +17,6 @@ type DeviceData struct {
 	sortedScores []string
 
 	newdevices []*DeviceInfo
-	mutex      sync.Mutex
 }
 
 func NewDeviceData() *DeviceData {
