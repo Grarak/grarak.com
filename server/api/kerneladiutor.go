@@ -69,9 +69,11 @@ func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 		}
 	case "device/get":
 		if kaAPi.client.Method == http.MethodGet {
-			if all, allok := kaAPi.client.Queries["all"]; allok && all[0] == "true" {
 
-				page, pageok := kaAPi.client.Queries["page"]
+			// Get all
+			if page, pageok := kaAPi.client.Queries["page"]; (pageok && len(kaAPi.client.Queries) == 1) ||
+				len(kaAPi.client.Queries) == 0 {
+
 				var pageNumber int = 1
 				if pageok {
 					if num, err := strconv.Atoi(page[0]); err == nil {
