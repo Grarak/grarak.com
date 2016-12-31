@@ -185,7 +185,7 @@ func (dInfo DeviceInfo) valid() bool {
 		!utils.StringEmpty(dInfo.Board) &&
 		!utils.StringEmpty(dInfo.Model) && dInfo.Model != "unknown" &&
 		!utils.StringEmpty(dInfo.Vendor) &&
-		dInfo.Commands != nil && len(dInfo.Commands) >= 10 &&
+		dInfo.Commands != nil &&
 		dInfo.Times != nil && len(dInfo.Times) >= 20 &&
 		dInfo.Cpu != 0
 }
