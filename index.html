@@ -5,7 +5,6 @@
     <title>Kernel Adiutor</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
 
     <!-- Polyfill(s) for older browsers -->
     <script src="node_modules/core-js/client/shim.min.js"></script>
@@ -14,16 +13,26 @@
     <script src="node_modules/reflect-metadata/Reflect.js"></script>
     <script src="node_modules/systemjs/dist/system.src.js"></script>
 
+    <script src="node_modules/hammerjs/hammer.min.js"></script>
+    <link href="node_modules/@angular/material/core/theming/prebuilt/indigo-pink.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
     <script src="systemjs.config.js"></script>
+
+    <style>
+        body {
+            margin: 0
+        }
+    </style>
     <script>
-      System.import('app').catch(function(err){ console.error(err); });
+        System.import('app').catch(function (err) { console.error(err); });
     </script>
 </head>
 
 <body>
-    <view-app>
+    <main-app>
         Loading...
-    </view-app>
+    </main-app>
 </body>
 
 </html>

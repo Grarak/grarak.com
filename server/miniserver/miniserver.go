@@ -12,6 +12,7 @@ const ContentJson string = "application/json"
 const ContentJavascript = "text/javascript"
 const ContentCss = "text/css"
 const ContentXIcon = "image/x-icon"
+const ContentSVG = "image/svg+xml"
 
 type MiniServer struct {
 	port int

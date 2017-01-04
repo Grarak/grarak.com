@@ -15,6 +15,7 @@ var supportedContentTypes [][]string = [][]string{
 	{miniserver.ContentHtml, ".htm", ".html", ".shtml"},
 	{miniserver.ContentCss, ".css"},
 	{miniserver.ContentXIcon, ".ico"},
+	{miniserver.ContentSVG, ".svg"},
 }
 
 var deviceData *api.DeviceData
