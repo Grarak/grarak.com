@@ -136,6 +136,7 @@ type DeviceInfo struct {
 	Board          string    `json:"board"`
 	Model          string    `json:"model"`
 	Vendor         string    `json:"vendor"`
+	CpuInfo        string    `json:"cpuinfo"`
 	Commands       []string  `json:"commands"`
 	Times          []float64 `json:"times"`
 	Cpu            float64   `json:"cpu"`
@@ -162,6 +163,12 @@ func NewDeviceInfo(data map[string]interface{}) *DeviceInfo {
 		Score:          j.GetFloat("score"),
 	}
 
+	if cpuinfoencoded := j.GetString("cpuinfo"); !utils.StringEmpty(cpuinfoencoded) {
+		if cpuinfo, err := utils.Decode(cpuinfoencoded); err == nil {
+			dInfo.CpuInfo = string(cpuinfo)
+		}
+	}
+
 	if dInfo.valid() {
 		if utils.StringEmpty(dInfo.ID) {
 			dInfo.ID = utils.Encode(dInfo.AndroidID)
@@ -185,6 +192,7 @@ func (dInfo DeviceInfo) valid() bool {
 		!utils.StringEmpty(dInfo.Board) &&
 		!utils.StringEmpty(dInfo.Model) && dInfo.Model != "unknown" &&
 		!utils.StringEmpty(dInfo.Vendor) &&
+		!utils.StringEmpty(dInfo.CpuInfo) &&
 		dInfo.Commands != nil &&
 		dInfo.Times != nil && len(dInfo.Times) >= 20 &&
 		dInfo.Cpu != 0

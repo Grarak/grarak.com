@@ -40,7 +40,7 @@ func NewDeviceData() *DeviceData {
 	for k := range dData.infos {
 		dData.sortedScores = append(dData.sortedScores, k)
 	}
-	dData.sortScores()
+	sortScores(dData.sortedScores, dData.infos)
 
 	go func() {
 		for {
@@ -48,11 +48,17 @@ func NewDeviceData() *DeviceData {
 
 			if len(dData.newdevices) > 0 {
 				var id string = dData.newdevices[0].AndroidID
+				var tmpList []string = make([]string, len(dData.sortedScores))
+				copy(tmpList, dData.sortedScores)
+
 				if _, ok := dData.infos[id]; !ok {
-					dData.sortedScores = append(dData.sortedScores, id)
+					tmpList = append(dData.sortedScores, id)
 					dData.infos[id] = dData.newdevices[0]
 				}
-				dData.sortScores()
+
+				sortScores(tmpList, dData.infos)
+				dData.sortedScores = tmpList
+
 				dData.newdevices = dData.newdevices[1:]
 			}
 		}
@@ -131,13 +137,10 @@ func (dData *DeviceData) Close() error {
 	return dData.db.Close()
 }
 
-func (dData *DeviceData) _sortScores(low, high int) {
+func _sortScores(list []string, data map[string]*DeviceInfo, low, high int) {
 	if low >= high {
 		return
 	}
-
-	var list []string = dData.sortedScores
-	var data map[string]*DeviceInfo = dData.infos
 
 	var middle int = low + (high-low)/2
 	var pivot float64 = data[list[middle]].Score
@@ -157,14 +160,14 @@ func (dData *DeviceData) _sortScores(low, high int) {
 			j--
 		}
 
-		dData._sortScores(low, j)
-		dData._sortScores(i, high)
+		_sortScores(list, data, low, j)
+		_sortScores(list, data, i, high)
 	}
 }
 
 // Use Quicksort algorithm to sort device scores
-func (dData *DeviceData) sortScores() {
-	dData._sortScores(0, len(dData.sortedScores)-1)
+func sortScores(list []string, data map[string]*DeviceInfo) {
+	_sortScores(list, data, 0, len(list)-1)
 
-	utils.ReverseStringArray(dData.sortedScores)
+	utils.ReverseStringArray(list)
 }
