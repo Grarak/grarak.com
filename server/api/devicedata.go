@@ -3,13 +3,30 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"sort"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"time"
-
 	"../utils"
 )
+
+type scoreSorter struct {
+	list  []string
+	infos map[string]*DeviceInfo
+}
+
+func (sorter scoreSorter) Len() int {
+	return len(sorter.list)
+}
+
+func (sorter scoreSorter) Swap(i, j int) {
+	sorter.list[i], sorter.list[j] = sorter.list[j], sorter.list[i]
+}
+
+func (sorter scoreSorter) Less(i, j int) bool {
+	return sorter.infos[sorter.list[i]].Score > sorter.infos[sorter.list[j]].Score
+}
 
 type DeviceData struct {
 	db           *sql.DB
@@ -40,7 +57,7 @@ func NewDeviceData() *DeviceData {
 	for k := range dData.infos {
 		dData.sortedScores = append(dData.sortedScores, k)
 	}
-	sortScores(dData.sortedScores, dData.infos)
+	sort.Sort(scoreSorter{dData.sortedScores, dData.infos})
 
 	go func() {
 		for {
@@ -56,7 +73,7 @@ func NewDeviceData() *DeviceData {
 					dData.infos[id] = dData.newdevices[0]
 				}
 
-				sortScores(tmpList, dData.infos)
+				sort.Sort(scoreSorter{tmpList, dData.infos})
 				dData.sortedScores = tmpList
 
 				dData.newdevices = dData.newdevices[1:]
@@ -135,39 +152,4 @@ func (dData *DeviceData) getDevices() map[string]*DeviceInfo {
 
 func (dData *DeviceData) Close() error {
 	return dData.db.Close()
-}
-
-func _sortScores(list []string, data map[string]*DeviceInfo, low, high int) {
-	if low >= high {
-		return
-	}
-
-	var middle int = low + (high-low)/2
-	var pivot float64 = data[list[middle]].Score
-
-	var i, j int = low, high
-	for i <= j {
-		for data[list[i]].Score < pivot {
-			i++
-		}
-		for data[list[j]].Score > pivot {
-			j--
-		}
-
-		if i <= j {
-			list[i], list[j] = list[j], list[i]
-			i++
-			j--
-		}
-
-		_sortScores(list, data, low, j)
-		_sortScores(list, data, i, high)
-	}
-}
-
-// Use Quicksort algorithm to sort device scores
-func sortScores(list []string, data map[string]*DeviceInfo) {
-	_sortScores(list, data, 0, len(list)-1)
-
-	utils.ReverseStringArray(list)
 }

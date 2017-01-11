@@ -92,13 +92,6 @@ func GetAverage(array []float64) float64 {
 	return sum
 }
 
-func ReverseStringArray(array []string) {
-	var length int = len(array)
-	for i := 0; i < length/2; i++ {
-		array[i], array[length-1-i] = array[length-1-i], array[i]
-	}
-}
-
 func Encode(text string) string {
 	return base64.StdEncoding.EncodeToString([]byte(text))
 }
