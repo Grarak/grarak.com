@@ -30,7 +30,8 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
 	var realPath string
 	for i := range urls {
 		if !utils.StringEmpty(urls[i]) &&
-			utils.FileExists(fmt.Sprintf("dist/%s", urls[i])) {
+			(utils.DirExists(fmt.Sprintf("dist/%s", urls[i])) ||
+				utils.FileExists(fmt.Sprintf("dist/%s", urls[i]))) {
 			var realPathBuf []string = []string{"dist"}
 			for x := i; x < len(urls); x++ {
 				realPathBuf = append(realPathBuf, urls[x])

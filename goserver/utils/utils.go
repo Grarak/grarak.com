@@ -10,8 +10,13 @@ func StringEmpty(text string) bool {
 }
 
 func FileExists(file string) bool {
-	_, err := os.Stat(file)
-	return err == nil
+	f, err := os.Stat(file)
+	return err == nil && f.Mode().IsRegular()
+}
+
+func DirExists(dir string) bool {
+	d, err := os.Stat(dir)
+	return err == nil && d.Mode().IsDir()
 }
 
 type Json struct {
