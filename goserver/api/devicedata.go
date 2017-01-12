@@ -53,7 +53,6 @@ func NewDeviceData() *DeviceData {
 	}
 	dData.infos = dData.getDevices()
 
-	dData.sortedScores = make([]string, 0)
 	for k := range dData.infos {
 		dData.sortedScores = append(dData.sortedScores, k)
 	}
@@ -140,7 +139,7 @@ func (dData *DeviceData) getDevices() map[string]*DeviceInfo {
 		err = json.Unmarshal([]byte(j), &data)
 		utils.Panic(err)
 
-		if dInfo := NewDeviceInfo(data); dInfo.valid() {
+		if dInfo := NewDeviceInfo(data, false); dInfo.valid() {
 			deviceInfos[dInfo.AndroidID] = dInfo
 		}
 	}

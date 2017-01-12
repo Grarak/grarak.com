@@ -52,7 +52,7 @@ func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 			var data map[string]interface{}
 			json.Unmarshal(kaAPi.client.Request, &data)
 
-			var dInfo *DeviceInfo = NewDeviceInfo(data)
+			var dInfo *DeviceInfo = NewDeviceInfo(data, true)
 			if dInfo.valid() {
 
 				var updated bool = kaAPi.putDatabase(dInfo)
@@ -144,7 +144,7 @@ type DeviceInfo struct {
 	Score          float64   `json:score`
 }
 
-func NewDeviceInfo(data map[string]interface{}) *DeviceInfo {
+func NewDeviceInfo(data map[string]interface{}, post bool) *DeviceInfo {
 	var j utils.Json = utils.Json{data}
 
 	var dInfo *DeviceInfo = &DeviceInfo{
@@ -163,10 +163,14 @@ func NewDeviceInfo(data map[string]interface{}) *DeviceInfo {
 		Score:          j.GetFloat("score"),
 	}
 
-	if cpuinfoencoded := j.GetString("cpuinfo"); !utils.StringEmpty(cpuinfoencoded) {
-		if cpuinfo, err := utils.Decode(cpuinfoencoded); err == nil {
-			dInfo.CpuInfo = string(cpuinfo)
+	if post {
+		if cpuinfoencoded := j.GetString("cpuinfo"); !utils.StringEmpty(cpuinfoencoded) {
+			if cpuinfo, err := utils.Decode(cpuinfoencoded); err == nil {
+				dInfo.CpuInfo = string(cpuinfo)
+			}
 		}
+	} else {
+		dInfo.CpuInfo = j.GetString("cpuinfo")
 	}
 
 	if dInfo.valid() {
