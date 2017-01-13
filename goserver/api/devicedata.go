@@ -3,30 +3,12 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
-	"sort"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
 	"../utils"
 )
-
-type scoreSorter struct {
-	list  []string
-	infos map[string]*DeviceInfo
-}
-
-func (sorter scoreSorter) Len() int {
-	return len(sorter.list)
-}
-
-func (sorter scoreSorter) Swap(i, j int) {
-	sorter.list[i], sorter.list[j] = sorter.list[j], sorter.list[i]
-}
-
-func (sorter scoreSorter) Less(i, j int) bool {
-	return sorter.infos[sorter.list[i]].Score > sorter.infos[sorter.list[j]].Score
-}
 
 type DeviceData struct {
 	db           *sql.DB
@@ -56,7 +38,12 @@ func NewDeviceData() *DeviceData {
 	for k := range dData.infos {
 		dData.sortedScores = append(dData.sortedScores, k)
 	}
-	sort.Sort(scoreSorter{dData.sortedScores, dData.infos})
+
+	minmaxDeterminator := func(i, j int) bool {
+		return dData.infos[dData.sortedScores[i]].Score >
+			dData.infos[dData.sortedScores[j]].Score
+	}
+	utils.SimpleSort(dData.sortedScores, minmaxDeterminator)
 
 	go func() {
 		for {
@@ -72,7 +59,7 @@ func NewDeviceData() *DeviceData {
 					dData.infos[id] = dData.newdevices[0]
 				}
 
-				sort.Sort(scoreSorter{tmpList, dData.infos})
+				utils.SimpleSort(tmpList, minmaxDeterminator)
 				dData.sortedScores = tmpList
 
 				dData.newdevices = dData.newdevices[1:]

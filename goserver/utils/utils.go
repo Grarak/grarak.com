@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/base64"
 	"os"
+	"sort"
 )
 
 func StringEmpty(text string) bool {
@@ -103,4 +104,25 @@ func Encode(text string) string {
 
 func Decode(text string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(text)
+}
+
+type sorter struct {
+	array              []string
+	minmaxDeterminator func(i, j int) bool
+}
+
+func (sorter sorter) Len() int {
+	return len(sorter.array)
+}
+
+func (sorter sorter) Swap(i, j int) {
+	sorter.array[i], sorter.array[j] = sorter.array[j], sorter.array[i]
+}
+
+func (sorter sorter) Less(i, j int) bool {
+	return sorter.minmaxDeterminator(i, j)
+}
+
+func SimpleSort(array []string, minmaxDeterminator func(i, j int) bool) {
+	sort.Sort(sorter{array, minmaxDeterminator})
 }
