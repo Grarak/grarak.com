@@ -1,15 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
+
+import { Utils } from '../utils/utils'
 
 @Component({
     selector: `toolbar-view`,
     template: `
         <div>
             <md-toolbar class="shadow" color="primary">
+                <div [style.display]="menuDisplay" style="height: 100%">
+                    <img id="hamburger" (click)="onMenuClick()" [src]="ic_hamburger" height="20">
+                </div>
                 <span>{{title}}</span>
             </md-toolbar>
-            <div id="bg">
-                <ng-content></ng-content>
-            </div>
         </div>
     `,
     styles: [
@@ -17,20 +19,32 @@ import { Component } from '@angular/core';
             .shadow {
                 box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
             }
-            #bg {
+
+            #hamburger {
+                margin-right: 20px;
+                top: 50%;
+                transform: translateY(-50%);
                 position: relative;
-                background-color: #2a7289;
-                width: 100%;
-                min-height: 20em;
-                z-index: -1;
+                cursor: pointer;
             }
         `
     ],
-    inputs: ['title', 'fixed']
+    inputs: ['title', 'menuDisplay'],
 })
 export class ToolbarComponent {
 
+    ic_hamburger: string = Utils.getAsset('ic_hamburger.svg')
+
     title: string
-    fixed: boolean
+    menuDisplay: string = "none"
+
+    @Output() menuClicked = new EventEmitter()
+
+    constructor() {
+    }
+
+    onMenuClick() {
+        this.menuClicked.emit()
+    }
 
 }

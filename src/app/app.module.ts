@@ -5,6 +5,7 @@ import { HttpModule } from '@angular/http'
 
 import { AppComponent } from './app.component'
 
+import { PagesModule } from './pages/pages.module'
 import { ViewsModule } from './views/views.module'
 
 @NgModule({
@@ -15,9 +16,11 @@ import { ViewsModule } from './views/views.module'
         BrowserModule,
         FormsModule,
         HttpModule,
+        PagesModule,
         ViewsModule
     ],
-    providers: [],
+    providers: [
+    ],
     bootstrap: [AppComponent]
 })
 export class AppModule {

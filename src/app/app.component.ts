@@ -1,81 +1,105 @@
-import { Component, NgZone } from '@angular/core'
+import { Component, NgZone, ViewChild, HostListener } from '@angular/core'
+import { Router } from '@angular/router'
+
+import { NavDrawerComponent } from './views/navdrawer.component'
 
 import { Utils } from './utils/utils'
 
 @Component({
     selector: 'app-view',
     template: `
-        <div #parent>
-            <toolbar-view title="Home">
-                <div id="toolbar_parent" align="center">
-                    <span id="toolbar_content_text">Welcome!</span>
-                </div>
-            </toolbar-view>
-            <div style="width: 100%">
-                <card-view id="card" [style.width.]="cardwitdh">
-                    <div content>
-                        <p align="center">Hi welcome to my website.</p>
-                        <p align="center">My name is Willi Ye and I am a hobby programmer.</p>
-                         <div align="center">
-                            <a target="_blank" href="https://www.github.com/Grarak">
-                                <img [src]="ic_github" width="25" height="25">
+        <div>
+            <navdrawer-view #navdrawer [navbarOpened]="navbarOpened">
+                <navbar-content>
+                    <md-list>
+                        <md-list-item *ngFor="let item of navbarItems">
+                            <a routerLink="{{item.route}}" routerLinkActive="selected" [routerLinkActiveOptions]="item.options" (click)="onNavbarItemClicked(item)">
+                                <p style="margin-top: 0">{{item.title}}</p>
                             </a>
-                        </div>
-                    </div>
-                </card-view>
-                <img id="profile_pic" [src]="profile_pic">
-            </div>
+                        </md-list-item>
+                    </md-list>
+                </navbar-content>
+
+                <navbar-page-content>
+                    <toolbar-view [title]="toolbarTitle" (menuClicked)="onToolbarMenuClicked()" [menuDisplay]="menuDisplay">
+                        Page
+                    </toolbar-view>
+
+                    <router-outlet></router-outlet>
+                </navbar-page-content>
+            </navdrawer-view>
         </div>
     `,
     styles: [
         `
-            #toolbar_parent {
-                position: absolute;
-                height: 100%;
-                width: 100%;
+            a {
+                color: rgba(0, 0, 0, .6);
+                text-decoration: none;
             }
-            #toolbar_content_text {
-                font-size: 2em;
-                position: absolute;
-                top: 40%;
-                left: 50%;
-                transform: translateX(-50%);
-                color: white;
-                font-family: sans-serif;
+            a:hover {
+                color: black;
             }
-            #profile_pic {
-                position: absolute;
-                width: 8em;
-                height: auto;
-                border-radius: 50%;
-                margin-top: -4em;
-                margin-left: 50%;
-                margin-right: 50%;
-                transform: translateX(-50%);
+            a:visited {
+                color: rgba(0, 0, 0, .7);
             }
-            #card {
-                position: absolute;
-                margin-top: 0.5em;
-                left: 50%;
-                transform: translateX(-50%);
+
+            .selected {
+                color: black;
+                font-weight: bold;
             }
         `
     ]
 })
 export class AppComponent {
 
+    navbarItems: any[] = [
+        { route: "/", title: "About me", options: { exact: true } },
+        { route: "/kerneladiutor", title: "Kernel Adiutor", options: {} }
+    ]
+
     profile_pic: string = Utils.getAsset('profile_pic.jpg')
     ic_github: string = Utils.getAsset('ic_github.svg')
 
-    cardwitdh: string
+    @ViewChild('navdrawer') navdrawer: NavDrawerComponent
 
-    constructor(ngZone: NgZone) {
-        this.cardwitdh = (window.innerWidth - window.innerWidth / 12) + "px"
-        window.onresize = () => {
-            ngZone.run(() => {
-                this.cardwitdh = (window.innerWidth - window.innerWidth / 12) + "px"
-            })
-        }
+    navbarOpened: boolean
+    menuDisplay: string
+    toolbarTitle: string
+
+    constructor(router: Router) {
+        this.onWindowResize(window.innerWidth)
+        var event = router.events.subscribe((data) => {
+            for (let i = 0; i < this.navbarItems.length; i++) {
+                if (data.url == this.navbarItems[i].route) {
+                    this.toolbarTitle = this.navbarItems[i].title
+                }
+            }
+            if (this.toolbarTitle == null) {
+                this.toolbarTitle = "Not found"
+            }
+            event.unsubscribe()
+        })
+    }
+
+    ngOnInit() {
+    }
+
+    @HostListener('window:resize', ['$event'])
+    onResize(event) {
+        this.onWindowResize(event.target.innerWidth)
+    }
+
+    onWindowResize(size: number) {
+        this.menuDisplay = size > 700 ? 'none' : 'block'
+    }
+
+    onToolbarMenuClicked() {
+        this.navdrawer.toggle()
+    }
+
+    onNavbarItemClicked(item: any) {
+        this.navdrawer.toggle()
+        this.toolbarTitle = item.title
     }
 
 }

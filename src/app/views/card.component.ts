@@ -5,13 +5,11 @@ import { Component, ViewChild, ElementRef } from '@angular/core';
     template: `
         <div>
             <md-card>
-                <md-card-header>
-                    <md-card-title #title>
-                        <ng-content select="[title]"></ng-content>
-                    </md-card-title>
-                </md-card-header>
+                <md-card-title #title>
+                    <ng-content select="card-title"></ng-content>
+                </md-card-title>
                 <md-card-content #content>
-                    <ng-content select="[content]"></ng-content>
+                    <ng-content select="card-content"></ng-content>
                 </md-card-content>
             </md-card>
         </div>
