@@ -77,7 +77,9 @@ func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 				var pageNumber int = 1
 				if pageok {
 					if num, err := strconv.Atoi(page[0]); err == nil {
-						pageNumber = num
+						if num > 0 {
+							pageNumber = num
+						}
 					}
 				}
 
