@@ -16,7 +16,8 @@ import { PageParentComponent } from './pageparent.component'
         RouterModule.forRoot([
             { path: '', component: AboutMeComponent },
             { path: 'kerneladiutor', component: KernelAdiutorComponent },
-            { path: '**', component: NotFoundComponent },
+            { path: '404', component: NotFoundComponent },
+            { path: '**', redirectTo: '404' },
         ], {})
     ],
     declarations: [
