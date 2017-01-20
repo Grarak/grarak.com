@@ -39,11 +39,7 @@ func NewDeviceData() *DeviceData {
 		dData.sortedScores = append(dData.sortedScores, k)
 	}
 
-	minmaxDeterminator := func(i, j int) bool {
-		return dData.infos[dData.sortedScores[i]].Score >
-			dData.infos[dData.sortedScores[j]].Score
-	}
-	utils.SimpleSort(dData.sortedScores, minmaxDeterminator)
+	utils.SimpleSort(dData.sortedScores, dData.getMinMaxDeterminator(dData.sortedScores))
 
 	go func() {
 		for {
@@ -59,7 +55,7 @@ func NewDeviceData() *DeviceData {
 					dData.infos[id] = dData.newdevices[0]
 				}
 
-				utils.SimpleSort(tmpList, minmaxDeterminator)
+				utils.SimpleSort(tmpList, dData.getMinMaxDeterminator(tmpList))
 				dData.sortedScores = tmpList
 
 				dData.newdevices = dData.newdevices[1:]
@@ -68,6 +64,12 @@ func NewDeviceData() *DeviceData {
 	}()
 
 	return dData
+}
+
+func (dData *DeviceData) getMinMaxDeterminator(array []string) func(i, j int) bool {
+	return func(i, j int) bool {
+		return dData.infos[array[i]].Score > dData.infos[array[j]].Score
+	}
 }
 
 func (dData *DeviceData) updateSortedScores(dInfo *DeviceInfo, insert bool) {
