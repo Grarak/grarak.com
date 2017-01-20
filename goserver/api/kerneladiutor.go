@@ -141,7 +141,7 @@ type DeviceInfo struct {
 	Times          []float64 `json:"times"`
 	Cpu            float64   `json:"cpu"`
 	Date           string    `json:"date"`
-	Score          float64   `json:score`
+	Score          float64   `json:"score"`
 }
 
 func NewDeviceInfo(data map[string]interface{}, post bool) *DeviceInfo {
