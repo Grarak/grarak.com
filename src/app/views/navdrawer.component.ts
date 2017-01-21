@@ -50,7 +50,7 @@ export class NavDrawerComponent {
     navbarOpened: boolean
     windowSize: number
 
-    constructor() {
+    ngOnInit() {
         this.onWindowResize(window.innerWidth)
     }
 

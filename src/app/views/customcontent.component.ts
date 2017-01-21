@@ -6,5 +6,4 @@ import { Component } from '@angular/core'
         <ng-content></ng-content>
     `
 })
-export class CustomComponent {
-}
+export class CustomComponent { }

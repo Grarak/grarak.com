@@ -8,7 +8,7 @@ import { Utils } from '../utils/utils'
         <div>
             <md-toolbar class="shadow" color="primary">
                 <div [style.display]="menuDisplay" style="height: 100%">
-                    <img id="hamburger" (click)="onMenuClick()" [src]="ic_hamburger" height="20">
+                    <md-icon id="hamburger" (click)="onMenuClick()">menu</md-icon>
                 </div>
                 <span>{{title}}</span>
             </md-toolbar>
@@ -33,15 +33,10 @@ import { Utils } from '../utils/utils'
 })
 export class ToolbarComponent {
 
-    ic_hamburger: string = Utils.getAsset('ic_hamburger.svg')
-
     title: string
     menuDisplay: string = "none"
 
     @Output() menuClicked = new EventEmitter()
-
-    constructor() {
-    }
 
     onMenuClick() {
         this.menuClicked.emit()

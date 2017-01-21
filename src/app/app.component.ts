@@ -54,7 +54,7 @@ export class AppComponent {
 
     navbarItems: any[] = [
         { route: "/", title: "About me", options: { exact: true } },
-        { route: "/kerneladiutor", title: "Kernel Adiutor", options: {} }
+        { route: "/kerneladiutor", title: "Kernel Adiutor", options: { exact: false } }
     ]
 
     profile_pic: string = Utils.getAsset('profile_pic.jpg')
@@ -66,12 +66,15 @@ export class AppComponent {
     menuDisplay: string
     toolbarTitle: string
 
-    constructor(router: Router) {
+    constructor(private router: Router) { }
+
+    ngOnInit() {
         this.onWindowResize(window.innerWidth)
-        var event = router.events.subscribe((data) => {
-            for (let i = 0; i < this.navbarItems.length; i++) {
-                if (data.url == this.navbarItems[i].route) {
-                    this.toolbarTitle = this.navbarItems[i].title
+        var event = this.router.events.subscribe((data) => {
+            for (let item of this.navbarItems) {
+                if ((item.options.exact && data.url == item.route)
+                    || (!item.options.exact && data.url.startsWith(item.route))) {
+                    this.toolbarTitle = item.title
                 }
             }
             if (this.toolbarTitle == null) {
@@ -79,9 +82,6 @@ export class AppComponent {
             }
             event.unsubscribe()
         })
-    }
-
-    ngOnInit() {
     }
 
     @HostListener('window:resize', ['$event'])

@@ -23,5 +23,4 @@ import { ViewsModule } from './views/views.module'
     ],
     bootstrap: [AppComponent]
 })
-export class AppModule {
-}
+export class AppModule { }

@@ -14,5 +14,4 @@ import { Component, HostListener } from '@angular/core'
         </pageparent-view>
     `
 })
-export class NotFoundComponent {
-}
+export class NotFoundComponent { }

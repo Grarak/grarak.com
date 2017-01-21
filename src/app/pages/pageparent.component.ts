@@ -12,7 +12,7 @@ export class PageParentComponent {
 
     parentMargin: string
 
-    constructor() {
+    ngOnInit() {
         this.onWindowResize(window.innerWidth)
     }
 

@@ -2,6 +2,7 @@ import { BrowserModule } from '@angular/platform-browser'
 import { NgModule } from '@angular/core'
 import { RouterModule } from '@angular/router'
 
+import { ServicesModule } from '../services/services.module'
 import { ViewsModule } from '../views/views.module'
 
 import { AboutMeComponent } from './aboutme.component'
@@ -12,13 +13,15 @@ import { PageParentComponent } from './pageparent.component'
 @NgModule({
     imports: [
         BrowserModule,
-        ViewsModule,
         RouterModule.forRoot([
             { path: '', component: AboutMeComponent },
-            { path: 'kerneladiutor', component: KernelAdiutorComponent },
+            { path: 'kerneladiutor/page/:page', component: KernelAdiutorComponent },
+            { path: 'kerneladiutor', redirectTo: 'kerneladiutor/page/1' },
             { path: '404', component: NotFoundComponent },
             { path: '**', redirectTo: '404' },
-        ], {})
+        ], {}),
+        ServicesModule,
+        ViewsModule
     ],
     declarations: [
         AboutMeComponent,

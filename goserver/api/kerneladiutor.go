@@ -70,34 +70,31 @@ func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 	case "device/get":
 		if kaAPi.client.Method == http.MethodGet {
 
-			// Get all
-			if page, pageok := kaAPi.client.Queries["page"]; (pageok && len(kaAPi.client.Queries) == 1) ||
-				len(kaAPi.client.Queries) == 0 {
+			page, pageok := kaAPi.client.Queries["page"]
 
-				var pageNumber int = 1
-				if pageok {
-					if num, err := strconv.Atoi(page[0]); err == nil {
-						if num > 0 {
-							pageNumber = num
-						}
+			var pageNumber int = 1
+			if pageok {
+				if num, err := strconv.Atoi(page[0]); err == nil {
+					if num > 0 {
+						pageNumber = num
 					}
 				}
+			}
 
-				responses := make([]DeviceInfo, 0)
-				for i := (pageNumber - 1) * 10; i < pageNumber*10; i++ {
-					if i < len(kaAPi.devicedata.sortedScores) {
-						if value, ok := kaAPi.devicedata.infos[kaAPi.devicedata.sortedScores[i]]; ok {
-							var info DeviceInfo = *value
-							info.AndroidID = ""
-							responses = append(responses, info)
-						}
+			responses := make([]DeviceInfo, 0)
+			for i := (pageNumber - 1) * 10; i < pageNumber*10; i++ {
+				if i < len(kaAPi.devicedata.sortedScores) {
+					if value, ok := kaAPi.devicedata.infos[kaAPi.devicedata.sortedScores[i]]; ok {
+						var info DeviceInfo = *value
+						info.AndroidID = ""
+						responses = append(responses, info)
 					}
 				}
-				if len(responses) > 0 {
-					b, err := json.Marshal(responses)
-					if err == nil {
-						response = kaAPi.client.ResponseBody(string(b))
-					}
+			}
+			if len(responses) > 0 {
+				b, err := json.Marshal(responses)
+				if err == nil {
+					response = kaAPi.client.ResponseBody(string(b))
 				}
 			}
 		}
