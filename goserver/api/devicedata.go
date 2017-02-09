@@ -7,6 +7,8 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"fmt"
+
 	"../utils"
 )
 
@@ -86,6 +88,7 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
 	utils.Panic(err)
 
 	var stmt *sql.Stmt
+	defer stmt.Close()
 	if _, ok := dData.infos[dInfo.AndroidID]; ok {
 		updated = true
 
@@ -103,7 +106,6 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
 		_, err = stmt.Exec(dInfo.AndroidID, string(j))
 		utils.Panic(err)
 	}
-	defer stmt.Close()
 
 	err = trans.Commit()
 	utils.Panic(err)
@@ -114,6 +116,7 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
 
 func (dData *DeviceData) getDevices() map[string]*DeviceInfo {
 	deviceInfos := make(map[string]*DeviceInfo)
+	invalidDdevices := make([]string, 0)
 
 	query, err := dData.db.Query("select json from devices")
 	utils.Panic(err)
@@ -130,10 +133,24 @@ func (dData *DeviceData) getDevices() map[string]*DeviceInfo {
 
 		if dInfo := NewDeviceInfo(data, false); dInfo.valid() {
 			deviceInfos[dInfo.AndroidID] = dInfo
+		} else {
+			// Collect invalid ids for later deletion
+			invalidDdevices = append(invalidDdevices, dInfo.AndroidID)
 		}
 	}
 	err = query.Err()
 	utils.Panic(err)
+
+	// Delete invalid ids from database
+	deleteStmt, err := dData.db.Prepare("delete from devices where id = ?")
+	utils.Panic(err)
+	defer deleteStmt.Close()
+
+	for _, invalidIds := range invalidDdevices {
+		utils.LogI(KA_TAG, fmt.Sprintf("%s invalid. Deleting", invalidIds))
+		_, err = deleteStmt.Exec(invalidIds)
+		utils.Panic(err)
+	}
 
 	return deviceInfos
 }
