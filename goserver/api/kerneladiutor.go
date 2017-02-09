@@ -136,6 +136,7 @@ type DeviceInfo struct {
 	Model          string    `json:"model"`
 	Vendor         string    `json:"vendor"`
 	CpuInfo        string    `json:"cpuinfo"`
+	Fingerprint    string    `json:"fingerprint"`
 	Commands       []string  `json:"commands"`
 	Times          []float64 `json:"times"`
 	Cpu            float64   `json:"cpu"`
@@ -155,6 +156,7 @@ func NewDeviceInfo(data map[string]interface{}, post bool) *DeviceInfo {
 		Board:          j.GetString("board"),
 		Model:          j.GetString("model"),
 		Vendor:         j.GetString("vendor"),
+		Fingerprint:    j.GetString("fingerprint"),
 		Commands:       j.GetStringArray("commands"),
 		Times:          j.GetFloatArray("times"),
 		Cpu:            j.GetFloat("cpu"),
@@ -196,6 +198,7 @@ func (dInfo DeviceInfo) valid() bool {
 		!utils.StringEmpty(dInfo.Model) && dInfo.Model != "unknown" &&
 		!utils.StringEmpty(dInfo.Vendor) &&
 		!utils.StringEmpty(dInfo.CpuInfo) &&
+		!utils.StringEmpty(dInfo.Fingerprint) &&
 		dInfo.Commands != nil &&
 		dInfo.Times != nil && len(dInfo.Times) >= 20 &&
 		dInfo.Cpu != 0
