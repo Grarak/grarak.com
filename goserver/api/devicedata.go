@@ -74,10 +74,6 @@ func (dData *DeviceData) getMinMaxDeterminator(array []string) func(i, j int) bo
 	}
 }
 
-func (dData *DeviceData) updateSortedScores(dInfo *DeviceInfo, insert bool) {
-	dData.newdevices = append(dData.newdevices, dInfo)
-}
-
 func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
 	var updated bool
 
@@ -88,8 +84,10 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
 	utils.Panic(err)
 
 	var stmt *sql.Stmt
-	defer stmt.Close()
+
 	if _, ok := dData.infos[dInfo.AndroidID]; ok {
+		// Device already registered
+		// Update its informations
 		updated = true
 
 		stmt, err = trans.Prepare("update devices set json = ? where id = ?")
@@ -98,6 +96,8 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
 		_, err = stmt.Exec(string(j), dInfo.AndroidID)
 		utils.Panic(err)
 	} else {
+		// New device incoming
+		// Insert its informations
 		updated = false
 
 		stmt, err = trans.Prepare("insert into devices(id, json) values(?,?)")
@@ -109,8 +109,12 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
 
 	err = trans.Commit()
 	utils.Panic(err)
+	defer stmt.Close()
 
-	dData.updateSortedScores(dInfo, !updated)
+	// Resort the list!
+	// Go routine above will handle this
+	dData.newdevices = append(dData.newdevices, dInfo)
+
 	return updated
 }
 
@@ -153,8 +157,4 @@ func (dData *DeviceData) getDevices() map[string]*DeviceInfo {
 	}
 
 	return deviceInfos
-}
-
-func (dData *DeviceData) Close() error {
-	return dData.db.Close()
 }

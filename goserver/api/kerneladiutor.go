@@ -43,6 +43,7 @@ func NewKernelAdiutorApi(client *miniserver.Client,
 
 func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 	var response *miniserver.Response
+	var silentStatusCode bool
 
 	switch kaAPi.path {
 	case "device/create":
@@ -70,15 +71,17 @@ func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 	case "device/get":
 		if kaAPi.client.Method == http.MethodGet {
 
-			page, pageok := kaAPi.client.Queries["page"]
-
 			var pageNumber int = 1
-			if pageok {
-				if num, err := strconv.Atoi(page[0]); err == nil {
+			if pageQuery, pageQueryok := kaAPi.client.Queries["page"]; pageQueryok {
+				if num, err := strconv.Atoi(pageQuery[0]); err == nil {
 					if num > 0 {
 						pageNumber = num
 					}
 				}
+			}
+
+			if silentcodeQuery, silentcodeQueryok := kaAPi.client.Queries["silent"]; silentcodeQueryok {
+				silentStatusCode = silentcodeQuery[0] == "true"
 			}
 
 			responses := make([]DeviceInfo, 0)
@@ -104,6 +107,9 @@ func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 	if response == nil {
 		if b, err := kaAPi.createStatus(false); err == nil {
 			response = kaAPi.client.ResponseBody(string(b))
+			if !silentStatusCode {
+				response.SetStatusCode(http.StatusNotFound)
+			}
 		}
 	}
 	response.SetContentType(miniserver.ContentJson)
