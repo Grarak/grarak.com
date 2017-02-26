@@ -1,7 +1,7 @@
 import { Component } from '@angular/core'
 import { Router, ActivatedRoute, Params } from '@angular/router'
 
-import { KernelAdiutorService, KernelAdiutorDevice } from '../services/kerneladiutor.service'
+import { KernelAdiutorService, KernelAdiutorDevice } from '../../services/kerneladiutor.service'
 
 @Component({
     selector: `kerneladiutor-page`,
@@ -14,10 +14,12 @@ import { KernelAdiutorService, KernelAdiutorDevice } from '../services/kerneladi
             <div style="margin-top:10px;margin-bottom:10px" *ngFor="let device of currentDevices; let i = index">
                 <card-view>
                     <card-title>
-                        <span style="font-size:smaller">{{(page - 1)*10+i+1}}. {{device.getVendor()}} {{device.getModel()}}</span>
+                        <span style="font-size:smaller">{{(page - 1)*10+i+1}}.
+                        <a routerLink="/kerneladiutor/id/{{device.getId()}}">{{device.getVendor()}} {{device.getModel()}}</a></span>
+                        <span style="font-size:medium">{{device.getBoard()}}</span>
                     </card-title>
                     <card-content>
-                        {{device.getBoard()}}
+                        {{device.getFingerprint()}}
                     </card-content>
                 </card-view>
             </div>
@@ -46,7 +48,7 @@ export class KernelAdiutorComponent {
             this.page = Number(params['page'])
             if (this.page > 0) {
                 this.showPrevious = this.page > 1
-                this.showNext = false
+                this.showNext = true
                 this.kaService.getDevices(this.page).forEach((device: KernelAdiutorDevice) => {
                     if (device == null) {
                         this.router.navigate(['404'])
@@ -56,9 +58,7 @@ export class KernelAdiutorComponent {
                 })
 
                 this.kaService.getDevices(this.page + 1).forEach((device: KernelAdiutorDevice) => {
-                    if (device != null) {
-                        this.showNext = true
-                    }
+                    this.showNext = device != null
                 })
             } else {
                 this.router.navigate(['404'])

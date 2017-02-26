@@ -40,6 +40,10 @@ export class KernelAdiutorDevice {
         return this.device.cpuinfo
     }
 
+    getFingerprint(): string {
+        return this.device.fingerprint
+    }
+
     getCommands(): string[] {
         return this.device.commands
     }
@@ -72,16 +76,17 @@ export class KernelAdiutorService {
         if (page > 0) {
             url.set('page', page.toString())
         }
+        url.set('silent', 'true')
 
         let observer = new Observable<KernelAdiutorDevice>((observer: any) => {
             this.http.get(url.toString()).forEach((response: Response) => {
-                if (response) {
-                    let devices = response.json()
-                    for (let device of devices) {
+                let json =response.json()
+                if (json.status == 404) {
+                    observer.next(null)
+                } else {
+                    for (let device of json) {
                         observer.next(new KernelAdiutorDevice(device))
                     }
-                } else {
-                    observer.next(null)
                 }
             })
         })
