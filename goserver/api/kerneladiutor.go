@@ -84,20 +84,37 @@ func (kaAPi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 				silentStatusCode = silentcodeQuery[0] == "true"
 			}
 
-			responses := make([]DeviceInfo, 0)
-			for i := (pageNumber - 1) * 10; i < pageNumber*10; i++ {
-				if i < len(kaAPi.devicedata.sortedScores) {
-					if value, ok := kaAPi.devicedata.infos[kaAPi.devicedata.sortedScores[i]]; ok {
+			if id, idOk := kaAPi.client.Queries["id"]; idOk {
+				// Specific id
+				realId, err := utils.Decode(id[0])
+				if err == nil {
+					if value, valueOk := kaAPi.devicedata.infos[string(realId)]; valueOk {
 						var info DeviceInfo = *value
 						info.AndroidID = ""
-						responses = append(responses, info)
+						jsonBuf, err := json.Marshal(info)
+						if err == nil {
+							response = kaAPi.client.ResponseBody(string(jsonBuf))
+						}
 					}
 				}
-			}
-			if len(responses) > 0 {
-				b, err := json.Marshal(responses)
-				if err == nil {
-					response = kaAPi.client.ResponseBody(string(b))
+			} else {
+				// No specific id
+				// Respond with list based on page
+				responses := make([]DeviceInfo, 0)
+				for i := (pageNumber - 1) * 10; i < pageNumber*10; i++ {
+					if i < len(kaAPi.devicedata.sortedScores) {
+						if value, valueOk := kaAPi.devicedata.infos[kaAPi.devicedata.sortedScores[i]]; valueOk {
+							var info DeviceInfo = *value
+							info.AndroidID = ""
+							responses = append(responses, info)
+						}
+					}
+				}
+				if len(responses) > 0 {
+					jsonBuf, err := json.Marshal(responses)
+					if err == nil {
+						response = kaAPi.client.ResponseBody(string(jsonBuf))
+					}
 				}
 			}
 		}

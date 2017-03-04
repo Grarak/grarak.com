@@ -19,7 +19,7 @@ import { KernelAdiutorService, KernelAdiutorDevice } from '../../services/kernel
                         <span style="font-size:medium">{{device.getBoard()}}</span>
                     </card-title>
                     <card-content>
-                        {{device.getFingerprint()}}
+                        <div style="word-wrap:break-word">{{device.getFingerprint()}}</div>
                     </card-content>
                 </card-view>
             </div>

@@ -26,11 +26,6 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
 	var response *miniserver.Response
 	var url string = client.Url[1:]
 
-	// Hammerjs workaround
-	if url == "hammer.min.js.map" {
-		url = "node_modules/hammerjs/hammer.min.js.map"
-	}
-
 	var urls []string = strings.Split(url, "/")
 
 	var realPath string

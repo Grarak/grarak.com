@@ -78,9 +78,9 @@ export class KernelAdiutorService {
         }
         url.set('silent', 'true')
 
-        let observer = new Observable<KernelAdiutorDevice>((observer: any) => {
+        return new Observable<KernelAdiutorDevice>((observer: any) => {
             this.http.get(url.toString()).forEach((response: Response) => {
-                let json =response.json()
+                let json = response.json()
                 if (json.status == 404) {
                     observer.next(null)
                 } else {
@@ -90,8 +90,22 @@ export class KernelAdiutorService {
                 }
             })
         })
+    }
 
-        return observer
+    getDeviceById(id: string): Observable<KernelAdiutorDevice> {
+        let url = new URLSearchParams(this.getDevicesLink)
+        url.set('id', id)
+        url.set('silent', 'true')
+        return new Observable<KernelAdiutorDevice>((observer: any) => {
+            this.http.get(url.toString()).forEach((response: Response) => {
+                let json = response.json()
+                if (json.status == 404) {
+                    observer.next(null)
+                } else {
+                    observer.next(new KernelAdiutorDevice(json))
+                }
+            })
+        })
     }
 
 }
