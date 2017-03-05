@@ -49,6 +49,9 @@ export class KernelAdiutorDeviceInfoComponent {
                     var seconds: number = Math.floor(timeAverage % 60)
                     var minutes: number = Math.floor(timeAverage / 60) % 60
                     var hours: number = Math.floor(timeAverage / 60 / 60)
+                    var potentialsot: string = (hours > 9 ? hours : "0" + hours) + ":"
+                    potentialsot += (minutes > 9 ? minutes : "0" + minutes) + ":"
+                    potentialsot += seconds > 9 ? seconds : "0" + seconds
 
                     var deviceSettings = device.getCommands()
                     var settings: string = ""
@@ -66,7 +69,7 @@ export class KernelAdiutorDeviceInfoComponent {
                         ["Kernel Version", device.getKernelVersion()],
                         ["Board", device.getBoard()],
                         ["Fingerprint", device.getFingerprint()],
-                        ["Potential SOT", hours + ":" + minutes + ":" + seconds + " (when screen is always on)"],
+                        ["Potential SOT", potentialsot + " (when screen is always on)"],
                         ["CPU Score", device.getCpu() + " (lower is better)"],
                         ["CPU Information", device.getCpuInfo()],
                         ["Settings", settings]
