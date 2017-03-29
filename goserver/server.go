@@ -6,10 +6,14 @@ import (
 
 	"fmt"
 
+	"strconv"
+
 	"./api"
 	"./miniserver"
 	"./utils"
 )
+
+const SERVER_TAG = "Server"
 
 var supportedContentTypes [][]string = [][]string{
 	{miniserver.ContentJson, ".json"},
@@ -99,6 +103,14 @@ func main() {
 		panic("Can't open devicedate db")
 	}
 
-	var server *miniserver.MiniServer = miniserver.NewServer(3000)
+	var port int = 3000
+	if len(os.Args) == 2 {
+		if p, err := strconv.Atoi(os.Args[1]); err == nil {
+			port = p
+		}
+	}
+
+	utils.LogI(SERVER_TAG, fmt.Sprintf("Starting server at port %d\n", port))
+	var server *miniserver.MiniServer = miniserver.NewServer(port)
 	server.StartListening(onConnect)
 }
