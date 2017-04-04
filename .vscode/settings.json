@@ -11,21 +11,5 @@
             "when": "$(basename).map"
         }
     },
-    "go.buildOnSave": true,
-    "go.lintOnSave": true,
-    "go.vetOnSave": true,
-    "go.buildTags": "",
-    "go.buildFlags": [],
-    "go.lintTool": "golint",
-    "go.lintFlags": [],
-    "go.vetFlags": [],
-    "go.coverOnSave": false,
-    "go.useCodeSnippetsOnFunctionSuggest": false,
-    "go.formatOnSave": true,
-    "go.formatTool": "goreturns",
-    "go.formatFlags": [],
-    "go.gopath": "/Users/willi/golang",
-    "go.goroot": "/usr/local/opt/go/libexec",
-    "go.gocodeAutoBuild": true,
     "typescript.check.workspaceVersion": false
 }

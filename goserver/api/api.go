@@ -2,6 +2,6 @@ package api
 
 import "../miniserver"
 
-type Api interface {
-	GetResponse() *miniserver.Response
+type Interface interface {
+        GetResponse() *miniserver.Response
 }

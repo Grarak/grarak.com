@@ -4,17 +4,10 @@
 /dist
 /tmp
 /server
+/server_test
 
 # dependencies
 /node_modules
-
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
 
 # misc
 /.sass-cache
@@ -30,6 +23,6 @@ testem.log
 /e2e/*.js
 /e2e/*.map
 
-#System Files
+# System Files
 .DS_Store
 Thumbs.db
