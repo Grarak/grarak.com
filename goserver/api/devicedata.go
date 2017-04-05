@@ -81,10 +81,14 @@ func NewDeviceData() *DeviceData {
                                 }
 
                                 // Insert to global sortedlist
-                                dData.insertDevice(newDevice, &dData.sortedScores)
+                                var bufSlice []string = dData.sortedScores
+                                dData.insertDevice(newDevice, &bufSlice)
+                                dData.sortedScores = bufSlice
 
                                 // Insert to board sortedlist
-                                var bufSlice []string = dData.board[newDevice.Board]
+                                var boardSlice []string = dData.board[newDevice.Board]
+                                bufSlice = make([]string, len(boardSlice))
+                                copy(bufSlice, boardSlice)
                                 dData.insertDevice(newDevice, &bufSlice)
                                 dData.board[newDevice.Board] = bufSlice
 
@@ -122,9 +126,9 @@ func (dData DeviceData) insertDevice(newDevice *DeviceInfo, sortedList *[]string
         }
 }
 
-func (dData DeviceData) _findDevice(newDevice *DeviceInfo, sortedList []string, min, max int) (int, error) {
-        if newDevice == nil || len(sortedList) == 0 {
-                return 0, utils.GenericError(fmt.Sprintf("Couldn't find %s", newDevice.AndroidID))
+func (dData DeviceData) _findDevice(searchDevice *DeviceInfo, sortedList []string, min, max int) (int, error) {
+        if len(sortedList) == 0 {
+                return 0, utils.GenericError(fmt.Sprintf("Couldn't find %s", searchDevice.AndroidID))
         }
 
         var length int = max - min
@@ -136,22 +140,22 @@ func (dData DeviceData) _findDevice(newDevice *DeviceInfo, sortedList []string, 
         // Make sure if id actually exists
         // otherwise it will end in an endless loop
         if min >= max {
-                if sortedList[min] == newDevice.AndroidID {
+                if sortedList[min] == searchDevice.AndroidID {
                         return min, nil
                 }
-                return min, utils.GenericError(fmt.Sprintf("Couldn't find %s", newDevice.AndroidID))
+                return min, utils.GenericError(fmt.Sprintf("Couldn't find %s", searchDevice.AndroidID))
         }
 
-        if newDevice.Score > middleDevice.Score {
-                return dData._findDevice(newDevice, sortedList, min, index-1)
-        } else if newDevice.Score < middleDevice.Score {
-                return dData._findDevice(newDevice, sortedList, index+1, max)
+        if searchDevice.Score > middleDevice.Score {
+                return dData._findDevice(searchDevice, sortedList, min, index-1)
+        } else if searchDevice.Score < middleDevice.Score {
+                return dData._findDevice(searchDevice, sortedList, index+1, max)
         }
 
-        if newDevice.AndroidID == middleDevice.AndroidID {
+        if searchDevice.AndroidID == sortedList[index] {
                 return index, nil
         }
-        return index, utils.GenericError(fmt.Sprintf("Couldn't find %s", newDevice.AndroidID))
+        return index, utils.GenericError(fmt.Sprintf("Couldn't find %s", searchDevice.AndroidID))
 }
 
 func (dData DeviceData) findDevice(newDevice *DeviceInfo, sortedList []string) (int, error) {
