@@ -145,5 +145,3 @@ func (dInfo deviceInfo) deviceGet(url string) {
 
         utils.Passed("Get device")
 }
-
-

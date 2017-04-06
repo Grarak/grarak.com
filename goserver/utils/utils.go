@@ -127,21 +127,21 @@ func SimpleSort(array []string, minmaxDeterminator func(i, j int) bool) {
         sort.Sort(sorter{array, minmaxDeterminator})
 }
 
-func InsertToSlice(item string, slice *[]string, index int) {
-        var buf []string = make([]string, len(*slice)+1)
-        copy(buf, (*slice)[:index])
+func InsertToSlice(item string, slice []string, index int) []string {
+        var buf []string = make([]string, len(slice)+1)
+        copy(buf, slice[:index])
         buf[index] = item
-        copy(buf[index+1:], (*slice)[index:len(*slice)])
+        copy(buf[index+1:], slice[index:])
 
-        *slice = buf
+        return buf
 }
 
-func RemoveFromSlice(slice *[]string, index int) {
-        var buf []string = make([]string, len(*slice)-1)
-        copy(buf, (*slice)[:index])
-        copy(buf[index:], (*slice)[index+1:])
+func RemoveFromSlice(slice []string, index int) []string {
+        var buf []string = make([]string, len(slice)-1)
+        copy(buf, slice[:index])
+        copy(buf[index:], slice[index+1:])
 
-        *slice = buf
+        return buf
 }
 
 type GenericError string

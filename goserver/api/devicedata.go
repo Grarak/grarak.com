@@ -46,7 +46,9 @@ func NewDeviceData() *DeviceData {
                 dData.sortedScores = append(dData.sortedScores, key)
         }
 
-        utils.SimpleSort(dData.sortedScores, dData.getMinMaxDeterminator(dData.sortedScores))
+        utils.SimpleSort(dData.sortedScores, func(i, j int) bool {
+                return dData.infos[dData.sortedScores[i]].Score > dData.infos[dData.sortedScores[j]].Score
+        })
 
         // Extract all existing board names
         // Use already sorted list, so we don't have to sort it afterwards
@@ -74,25 +76,21 @@ func NewDeviceData() *DeviceData {
                                         if boardDevices, boardDevicesOk := dData.board[oldDevice.Board];
                                                 boardDevicesOk && len(boardDevices) > 0 {
                                                 if index, err := dData.findDevice(oldDevice, boardDevices); err == nil {
-                                                        utils.RemoveFromSlice(&boardDevices, index)
-                                                        dData.board[oldDevice.Board] = boardDevices
+                                                        dData.board[oldDevice.Board] =
+                                                                utils.RemoveFromSlice(boardDevices, index)
                                                 }
                                         }
                                 }
 
                                 // Insert to global sortedlist
-                                var bufSlice []string = dData.sortedScores
-                                dData.insertDevice(newDevice, &bufSlice)
-                                dData.sortedScores = bufSlice
+                                newSortedList := dData.insertDevice(newDevice, dData.sortedScores)
 
                                 // Insert to board sortedlist
-                                var boardSlice []string = dData.board[newDevice.Board]
-                                bufSlice = make([]string, len(boardSlice))
-                                copy(bufSlice, boardSlice)
-                                dData.insertDevice(newDevice, &bufSlice)
-                                dData.board[newDevice.Board] = bufSlice
+                                newBoardList := dData.insertDevice(newDevice, dData.board[newDevice.Board])
 
                                 dData.infos[newDevice.AndroidID] = newDevice
+                                dData.sortedScores = newSortedList
+                                dData.board[newDevice.Board] = newBoardList
                                 dData.newDevices = dData.newDevices[1:]
                         }
 
@@ -103,27 +101,30 @@ func NewDeviceData() *DeviceData {
         return dData
 }
 
-func (dData DeviceData) insertDevice(newDevice *DeviceInfo, sortedList *[]string) {
+func (dData DeviceData) insertDevice(newDevice *DeviceInfo, sortedList []string) []string {
         var index int = 0
         var err error
 
         // Remove the old position in sorted list
         if oldDevice, ok := dData.infos[newDevice.AndroidID]; ok {
-                index, err = dData.findDevice(oldDevice, *sortedList)
+                index, err = dData.findDevice(oldDevice, sortedList)
                 if err == nil {
-                        utils.RemoveFromSlice(sortedList, index)
-                        index, err = dData.findDevice(newDevice, *sortedList)
-                        if err == nil {
-                                panic(fmt.Sprintf("%s is still there", newDevice.AndroidID))
-                        }
+                        sortedList = utils.RemoveFromSlice(sortedList, index)
                 }
         }
 
-        if len(*sortedList) == 0 || newDevice.Score >= dData.infos[(*sortedList)[index]].Score {
-                utils.InsertToSlice(newDevice.AndroidID, sortedList, index)
-        } else {
-                utils.InsertToSlice(newDevice.AndroidID, sortedList, index+1)
+        index, err = dData.findDevice(newDevice, sortedList)
+        if err == nil {
+                panic(fmt.Sprintf("%s shouldn't be in the list", newDevice.AndroidID))
         }
+
+        if len(sortedList) == 0 || newDevice.Score >= dData.infos[sortedList[index]].Score {
+                sortedList = utils.InsertToSlice(newDevice.AndroidID, sortedList, index)
+        } else {
+                sortedList = utils.InsertToSlice(newDevice.AndroidID, sortedList, index+1)
+        }
+
+        return sortedList
 }
 
 func (dData DeviceData) _findDevice(searchDevice *DeviceInfo, sortedList []string, min, max int) (int, error) {
@@ -160,12 +161,6 @@ func (dData DeviceData) _findDevice(searchDevice *DeviceInfo, sortedList []strin
 
 func (dData DeviceData) findDevice(newDevice *DeviceInfo, sortedList []string) (int, error) {
         return dData._findDevice(newDevice, sortedList, 0, len(sortedList)-1)
-}
-
-func (dData *DeviceData) getMinMaxDeterminator(array []string) func(i, j int) bool {
-        return func(i, j int) bool {
-                return dData.infos[array[i]].Score > dData.infos[array[j]].Score
-        }
 }
 
 func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
