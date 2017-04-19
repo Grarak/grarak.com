@@ -5,8 +5,13 @@ import (
         "io/ioutil"
         "net/http"
         "os"
+        "net"
+        "strconv"
+
+        "../utils"
 )
 
+const ContentText string = "text/plain"
 const ContentHtml string = "text/html"
 const ContentJson string = "application/json"
 const ContentJavascript = "text/javascript"
@@ -15,7 +20,8 @@ const ContentXIcon = "image/x-icon"
 const ContentSVG = "image/svg+xml"
 
 type MiniServer struct {
-        port int
+        port     int
+        listener net.Listener
 }
 
 func NewServer(port int) *MiniServer {
@@ -53,5 +59,15 @@ func (miniserver *MiniServer) StartListening(callback func(client *Client) *Resp
                         response.Write(content)
                 }
         })
-        http.ListenAndServe(fmt.Sprintf(":%d", miniserver.port), nil)
+
+        listener, err := net.Listen("tcp", ":"+strconv.Itoa(miniserver.port))
+        utils.Panic(err)
+        miniserver.listener = listener
+        http.Serve(listener, nil)
+}
+
+func (miniserver *MiniServer) StopListening() {
+        if miniserver.listener != nil {
+                miniserver.listener.Close()
+        }
 }

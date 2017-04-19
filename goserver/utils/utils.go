@@ -6,6 +6,10 @@ import (
         "sort"
 )
 
+const SERVERDATA = "./serverdata"
+const KERNELADIUTOR = SERVERDATA + "/kerneladiutor"
+const MANDY = SERVERDATA + "/mandy"
+
 func StringEmpty(text string) bool {
         return len(text) == 0
 }
@@ -148,4 +152,13 @@ type GenericError string
 
 func (message GenericError) Error() string {
         return string(message)
+}
+
+func SliceContains(item string, slice []string) bool {
+        for _, s := range slice {
+                if item == s {
+                        return true
+                }
+        }
+        return false
 }

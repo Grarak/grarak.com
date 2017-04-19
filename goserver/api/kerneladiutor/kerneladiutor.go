@@ -1,24 +1,21 @@
-package api
+package api_kerneladiutor
 
 import (
         "encoding/json"
-        "fmt"
         "net/http"
-        "time"
 
         "strconv"
 
-        "../miniserver"
-        "../utils"
+        "../../kerneladiutor"
+        "../../miniserver"
+        "../../utils"
 )
-
-const KA_TAG = "kerneladiutor"
 
 type KernelAdiutorApi struct {
         client     *miniserver.Client
         path       string
         version    string
-        devicedata *DeviceData
+        devicedata *kerneladiutor.DeviceData
 }
 
 func (kaAPi KernelAdiutorApi) GetResponse() *miniserver.Response {
@@ -30,9 +27,12 @@ func (kaAPi KernelAdiutorApi) GetResponse() *miniserver.Response {
         }
 }
 
-func NewKernelAdiutorApi(client *miniserver.Client,
-        path, version string,
-        dData *DeviceData) KernelAdiutorApi {
+func NewKernelAdiutorApi(
+        client *miniserver.Client,
+        path,
+        version string,
+        dData *kerneladiutor.DeviceData,
+) KernelAdiutorApi {
         return KernelAdiutorApi{
                 client:     client,
                 path:       path,
@@ -49,16 +49,10 @@ func (kaApi KernelAdiutorApi) deviceCreate() *miniserver.Response {
                 return nil
         }
 
-        var dInfo *DeviceInfo = NewDeviceInfo(data, true)
-        if dInfo.valid() {
+        var dInfo *kerneladiutor.DeviceInfo = kerneladiutor.NewDeviceInfo(data, true)
+        if dInfo.Valid() {
 
-                var updated bool = kaApi.devicedata.Update(dInfo)
-                if updated {
-                        utils.LogI(KA_TAG, fmt.Sprintf("Updating device %s", dInfo.Model))
-                } else {
-                        utils.LogI(KA_TAG, fmt.Sprintf("Inserting device %s", dInfo.Model))
-                }
-
+                kaApi.devicedata.UpdateDevice(dInfo)
                 if b, err := kaApi.createStatus(true); err == nil {
                         return kaApi.client.ResponseBody(string(b))
                 }
@@ -81,8 +75,8 @@ func (kaApi KernelAdiutorApi) deviceGet() *miniserver.Response {
                 // Specific id
                 realId, err := utils.Decode(id[0])
                 if err == nil {
-                        if value, valueOk := kaApi.devicedata.infos[string(realId)]; valueOk {
-                                var info DeviceInfo = *value
+                        if value, valueOk := kaApi.devicedata.Infos[string(realId)]; valueOk {
+                                var info kerneladiutor.DeviceInfo = *value
                                 info.AndroidID = ""
                                 jsonBuf, err := json.Marshal(info)
                                 if err == nil {
@@ -93,11 +87,11 @@ func (kaApi KernelAdiutorApi) deviceGet() *miniserver.Response {
         } else {
                 // No specific id
                 // Respond with list based on page
-                responses := make([]DeviceInfo, 0)
+                responses := make([]kerneladiutor.DeviceInfo, 0)
                 for i := (pageNumber - 1) * 10; i < pageNumber*10; i++ {
-                        if i < len(kaApi.devicedata.sortedScores) {
-                                if value, valueOk := kaApi.devicedata.infos[kaApi.devicedata.sortedScores[i]]; valueOk {
-                                        var info DeviceInfo = *value
+                        if i < len(kaApi.devicedata.SortedScores) {
+                                if value, valueOk := kaApi.devicedata.Infos[kaApi.devicedata.SortedScores[i]]; valueOk {
+                                        var info kerneladiutor.DeviceInfo = *value
                                         info.AndroidID = ""
                                         responses = append(responses, info)
                                 }
@@ -116,11 +110,11 @@ func (kaApi KernelAdiutorApi) deviceGet() *miniserver.Response {
 
 func (kaApi KernelAdiutorApi) boardGet() *miniserver.Response {
         if id, idOk := kaApi.client.Queries["id"]; idOk {
-                if devices, boardOk := kaApi.devicedata.board[id[0]]; boardOk {
+                if devices, boardOk := kaApi.devicedata.Board[id[0]]; boardOk {
                         var deviceIds []string = make([]string, 0)
 
                         for _, device := range devices {
-                                deviceIds = append(deviceIds, kaApi.devicedata.infos[device].ID)
+                                deviceIds = append(deviceIds, kaApi.devicedata.Infos[device].ID)
                         }
 
                         if len(deviceIds) > 0 {
@@ -134,7 +128,7 @@ func (kaApi KernelAdiutorApi) boardGet() *miniserver.Response {
                 }
         } else {
                 var boards []string = make([]string, 0)
-                for board, boardList := range kaApi.devicedata.board {
+                for board, boardList := range kaApi.devicedata.Board {
                         if len(boardList) > 0 {
                                 boards = append(boards, board)
                         }
@@ -202,87 +196,4 @@ func (kaApi KernelAdiutorApi) createStatus(success bool) ([]byte, error) {
                 Status  int64  `json:"status"`
         }{success, kaApi.client.Method, kaApi.path,
           kaApi.version, int64(statusCode)})
-}
-
-type DeviceInfo struct {
-        ID             string    `json:"id"`
-        AndroidID      string    `json:"android_id,omitempty"`
-        AndroidVersion string    `json:"android_version"`
-        KernelVersion  string    `json:"kernel_version"`
-        AppVersion     string    `json:"app_version"`
-        Board          string    `json:"board"`
-        Model          string    `json:"model"`
-        Vendor         string    `json:"vendor"`
-        CpuInfo        string    `json:"cpuinfo"`
-        Fingerprint    string    `json:"fingerprint"`
-        Commands       []string  `json:"commands"`
-        Times          []float64 `json:"times"`
-        Cpu            float64   `json:"cpu"`
-        Date           string    `json:"date"`
-        Score          float64   `json:"score"`
-}
-
-func NewDeviceInfo(data map[string]interface{}, post bool) *DeviceInfo {
-        var j utils.Json = utils.Json{data}
-
-        var dInfo *DeviceInfo = &DeviceInfo{
-                ID:             j.GetString("id"),
-                AndroidID:      j.GetString("android_id"),
-                AndroidVersion: j.GetString("android_version"),
-                KernelVersion:  j.GetString("kernel_version"),
-                AppVersion:     j.GetString("app_version"),
-                Board:          j.GetString("board"),
-                Model:          j.GetString("model"),
-                Vendor:         j.GetString("vendor"),
-                Fingerprint:    j.GetString("fingerprint"),
-                Commands:       j.GetStringArray("commands"),
-                Times:          j.GetFloatArray("times"),
-                Cpu:            j.GetFloat("cpu"),
-                Date:           j.GetString("date"),
-                Score:          j.GetFloat("score"),
-        }
-
-        if post {
-                if cpuinfoencoded := j.GetString("cpuinfo"); !utils.StringEmpty(cpuinfoencoded) {
-                        if cpuinfo, err := utils.Decode(cpuinfoencoded); err == nil {
-                                dInfo.CpuInfo = string(cpuinfo)
-                        }
-                }
-        } else {
-                dInfo.CpuInfo = j.GetString("cpuinfo")
-        }
-
-        if dInfo.valid() {
-                if utils.StringEmpty(dInfo.ID) {
-                        dInfo.ID = utils.Encode(dInfo.AndroidID)
-                }
-                if utils.StringEmpty(dInfo.Date) {
-                        dInfo.Date = time.Now().Format(time.RFC3339)
-                }
-                if dInfo.Score == 0 {
-                        dInfo.Score = utils.GetAverage(dInfo.Times)*1e9 - dInfo.Cpu
-                }
-        }
-
-        return dInfo
-}
-
-func (dInfo DeviceInfo) valid() bool {
-        return !utils.StringEmpty(dInfo.AndroidID) &&
-                len(dInfo.AndroidID) >= 12 &&
-                !utils.StringEmpty(dInfo.AndroidVersion) &&
-                !utils.StringEmpty(dInfo.KernelVersion) &&
-                !utils.StringEmpty(dInfo.AppVersion) &&
-                !utils.StringEmpty(dInfo.Board) &&
-                !utils.StringEmpty(dInfo.Model) && dInfo.Model != "unknown" &&
-                !utils.StringEmpty(dInfo.Vendor) &&
-                !utils.StringEmpty(dInfo.CpuInfo) &&
-                !utils.StringEmpty(dInfo.Fingerprint) &&
-                dInfo.Commands != nil &&
-                dInfo.Times != nil && len(dInfo.Times) >= 20 &&
-                dInfo.Cpu != 0
-}
-
-func (dInfo DeviceInfo) Json() ([]byte, error) {
-        return json.Marshal(dInfo)
 }

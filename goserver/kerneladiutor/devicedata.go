@@ -1,4 +1,4 @@
-package api
+package kerneladiutor
 
 import (
         "database/sql"
@@ -15,16 +15,16 @@ import (
 type DeviceData struct {
         db *sql.DB
 
-        infos        map[string]*DeviceInfo
-        sortedScores []string
+        Infos        map[string]*DeviceInfo
+        SortedScores []string
 
-        board map[string][]string
+        Board map[string][]string
 
         newDevices []*DeviceInfo
 }
 
 func NewDeviceData() *DeviceData {
-        db, err := sql.Open("sqlite3", "./serverdata/device.db")
+        db, err := sql.Open("sqlite3", utils.KERNELADIUTOR+"/device.db")
         if err != nil {
                 return nil
         }
@@ -34,7 +34,7 @@ func NewDeviceData() *DeviceData {
                 return nil
         }
 
-        var dData *DeviceData = &DeviceData{
+        dData := &DeviceData{
                 db,
                 getDevices(db),
                 make([]string, 0),
@@ -42,24 +42,24 @@ func NewDeviceData() *DeviceData {
                 make([]*DeviceInfo, 0),
         }
 
-        for key := range dData.infos {
-                dData.sortedScores = append(dData.sortedScores, key)
+        for key := range dData.Infos {
+                dData.SortedScores = append(dData.SortedScores, key)
         }
 
-        utils.SimpleSort(dData.sortedScores, func(i, j int) bool {
-                return dData.infos[dData.sortedScores[i]].Score > dData.infos[dData.sortedScores[j]].Score
+        utils.SimpleSort(dData.SortedScores, func(i, j int) bool {
+                return dData.Infos[dData.SortedScores[i]].Score > dData.Infos[dData.SortedScores[j]].Score
         })
 
         // Extract all existing board names
         // Use already sorted list, so we don't have to sort it afterwards
-        for _, id := range dData.sortedScores {
-                var device *DeviceInfo = dData.infos[id]
+        for _, id := range dData.SortedScores {
+                var device *DeviceInfo = dData.Infos[id]
 
-                var boardDevices []string = dData.board[device.Board]
+                var boardDevices []string = dData.Board[device.Board]
                 if boardDevices == nil {
                         boardDevices = make([]string, 0)
                 }
-                dData.board[device.Board] = append(boardDevices, device.AndroidID)
+                dData.Board[device.Board] = append(boardDevices, device.AndroidID)
         }
 
         // Start a go routine
@@ -67,30 +67,30 @@ func NewDeviceData() *DeviceData {
         go func() {
                 for {
                         if len(dData.newDevices) > 0 {
-                                var newDevice *DeviceInfo = dData.newDevices[0]
+                                newDevice := dData.newDevices[0]
 
                                 // Check if the board of the updated device got changed
                                 // If yes then remove it from the old map
-                                if oldDevice, ok := dData.infos[newDevice.AndroidID]; ok &&
+                                if oldDevice, ok := dData.Infos[newDevice.AndroidID]; ok &&
                                         newDevice.Board != oldDevice.Board {
-                                        if boardDevices, boardDevicesOk := dData.board[oldDevice.Board];
+                                        if boardDevices, boardDevicesOk := dData.Board[oldDevice.Board];
                                                 boardDevicesOk && len(boardDevices) > 0 {
                                                 if index, err := dData.findDevice(oldDevice, boardDevices); err == nil {
-                                                        dData.board[oldDevice.Board] =
+                                                        dData.Board[oldDevice.Board] =
                                                                 utils.RemoveFromSlice(boardDevices, index)
                                                 }
                                         }
                                 }
 
                                 // Insert to global sortedlist
-                                newSortedList := dData.insertDevice(newDevice, dData.sortedScores)
+                                newSortedList := dData.insertDevice(newDevice, dData.SortedScores)
 
                                 // Insert to board sortedlist
-                                newBoardList := dData.insertDevice(newDevice, dData.board[newDevice.Board])
+                                newBoardList := dData.insertDevice(newDevice, dData.Board[newDevice.Board])
 
-                                dData.infos[newDevice.AndroidID] = newDevice
-                                dData.sortedScores = newSortedList
-                                dData.board[newDevice.Board] = newBoardList
+                                dData.Infos[newDevice.AndroidID] = newDevice
+                                dData.SortedScores = newSortedList
+                                dData.Board[newDevice.Board] = newBoardList
                                 dData.newDevices = dData.newDevices[1:]
                         }
 
@@ -106,7 +106,7 @@ func (dData DeviceData) insertDevice(newDevice *DeviceInfo, sortedList []string)
         var err error
 
         // Remove the old position in sorted list
-        if oldDevice, ok := dData.infos[newDevice.AndroidID]; ok {
+        if oldDevice, ok := dData.Infos[newDevice.AndroidID]; ok {
                 index, err = dData.findDevice(oldDevice, sortedList)
                 if err == nil {
                         sortedList = utils.RemoveFromSlice(sortedList, index)
@@ -118,7 +118,7 @@ func (dData DeviceData) insertDevice(newDevice *DeviceInfo, sortedList []string)
                 panic(fmt.Sprintf("%s shouldn't be in the list", newDevice.AndroidID))
         }
 
-        if len(sortedList) == 0 || newDevice.Score >= dData.infos[sortedList[index]].Score {
+        if len(sortedList) == 0 || newDevice.Score >= dData.Infos[sortedList[index]].Score {
                 sortedList = utils.InsertToSlice(newDevice.AndroidID, sortedList, index)
         } else {
                 sortedList = utils.InsertToSlice(newDevice.AndroidID, sortedList, index+1)
@@ -132,11 +132,11 @@ func (dData DeviceData) _findDevice(searchDevice *DeviceInfo, sortedList []strin
                 return 0, utils.GenericError(fmt.Sprintf("Couldn't find %s", searchDevice.AndroidID))
         }
 
-        var length int = max - min
-        var middle int = length / 2
-        var index int = middle + min
+        length := max - min
+        middle := length / 2
+        index := middle + min
 
-        var middleDevice *DeviceInfo = dData.infos[sortedList[index]]
+        middleDevice := dData.Infos[sortedList[index]]
 
         // Make sure if id actually exists
         // otherwise it will end in an endless loop
@@ -163,8 +163,7 @@ func (dData DeviceData) findDevice(newDevice *DeviceInfo, sortedList []string) (
         return dData._findDevice(newDevice, sortedList, 0, len(sortedList)-1)
 }
 
-func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
-        var updated bool
+func (dData *DeviceData) UpdateDevice(dInfo *DeviceInfo) {
 
         j, err := dInfo.Json()
         utils.Panic(err)
@@ -173,11 +172,9 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
         utils.Panic(err)
 
         var stmt *sql.Stmt
-
-        if _, ok := dData.infos[dInfo.AndroidID]; ok {
+        if _, ok := dData.Infos[dInfo.AndroidID]; ok {
                 // Device already registered
                 // Update its informations
-                updated = true
 
                 stmt, err = trans.Prepare("update devices set json = ? where id = ?")
                 utils.Panic(err)
@@ -187,7 +184,6 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
         } else {
                 // New device incoming
                 // Insert its informations
-                updated = false
 
                 stmt, err = trans.Prepare("insert into devices(id, json) values(?,?)")
                 utils.Panic(err)
@@ -203,14 +199,12 @@ func (dData *DeviceData) Update(dInfo *DeviceInfo) bool {
         // Insert/Update sorted list
         // Go routine above will handle the sorting
         dData.newDevices = append(dData.newDevices, dInfo)
-
-        return updated
 }
 
 func getDevices(db *sql.DB) map[string]*DeviceInfo {
 
         deviceInfos := make(map[string]*DeviceInfo)
-        invalidDdevices := make([]string, 0)
+        var invalidDevices []string
 
         query, err := db.Query("SELECT json FROM devices")
         utils.Panic(err)
@@ -225,11 +219,11 @@ func getDevices(db *sql.DB) map[string]*DeviceInfo {
                 err = json.Unmarshal([]byte(j), &data)
                 utils.Panic(err)
 
-                if dInfo := NewDeviceInfo(data, false); dInfo.valid() {
+                if dInfo := NewDeviceInfo(data, false); dInfo.Valid() {
                         deviceInfos[dInfo.AndroidID] = dInfo
                 } else {
                         // Collect invalid ids for later deletion
-                        invalidDdevices = append(invalidDdevices, dInfo.AndroidID)
+                        invalidDevices = append(invalidDevices, dInfo.AndroidID)
                 }
         }
         err = query.Err()
@@ -240,7 +234,7 @@ func getDevices(db *sql.DB) map[string]*DeviceInfo {
         utils.Panic(err)
         defer deleteStmt.Close()
 
-        for _, invalidIds := range invalidDdevices {
+        for _, invalidIds := range invalidDevices {
                 utils.LogI(KA_TAG, fmt.Sprintf("%s invalid. Deleting", invalidIds))
                 _, err = deleteStmt.Exec(invalidIds)
                 utils.Panic(err)

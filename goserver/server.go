@@ -9,8 +9,13 @@ import (
         "strconv"
 
         "./api"
+        "./api/kerneladiutor"
+        "./api/mandy"
+        "./kerneladiutor"
+        "./mandy"
         "./miniserver"
         "./utils"
+        "os/signal"
 )
 
 const SERVER_TAG = "Server"
@@ -24,7 +29,9 @@ var supportedContentTypes [][]string = [][]string{
         {miniserver.ContentSVG, ".svg"},
 }
 
-var deviceData *api.DeviceData
+var kaDeviceData *kerneladiutor.DeviceData
+var mandyUserData *mandy.UserData
+var mandyStatus *mandy.MandyStatus
 
 func onConnect(client *miniserver.Client) *miniserver.Response {
         var response *miniserver.Response
@@ -33,6 +40,8 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
         var urls []string = strings.Split(url, "/")
 
         var realPath string
+        // Check if site requests an HTML file
+        // They are all inside the dist directory
         for i := range urls {
                 if !utils.StringEmpty(urls[i]) &&
                         (utils.DirExists(fmt.Sprintf("dist/%s", urls[i])) ||
@@ -46,14 +55,18 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
                 }
         }
 
+        // Make sure nobody is trying to access private data
         if urls[0] != "/" && urls[0] != ".." && urls[0] != "serverdata" {
                 if !utils.StringEmpty(realPath) {
+                        // File belongs to the website inside the dist directory
+                        // Update the url accordingly
                         url = realPath
                 }
                 if utils.FileExists(url) {
                         response = client.ResponseFile(url)
                         response.SetContentType("text/plain")
 
+                        // Make content type match the extension of the requested file
                 typesLoop:
                         for _, contentType := range supportedContentTypes {
                                 for i := 1; i < len(contentType); i++ {
@@ -75,9 +88,20 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
                 if len(urls) >= 4 && urls[1] == "api" && len(realPath) == 0 {
                         var resApi api.Interface
 
-                        if urls[0] == "kerneladiutor" {
-                                resApi = api.NewKernelAdiutorApi(client,
-                                        strings.Join(urls[3:], "/"), urls[2], deviceData)
+                        var path string = strings.Join(urls[3:], "/")
+                        var apiVersion string = urls[2]
+                        switch urls[0] {
+                        case "kerneladiutor":
+                                resApi = api_kerneladiutor.NewKernelAdiutorApi(
+                                        client, path, apiVersion, kaDeviceData,
+                                )
+                                break
+                        case "mandy":
+                                resApi = api_mandy.NewMandyApi(
+                                        client, path, apiVersion, mandyUserData,
+                                        mandyStatus,
+                                )
+                                break
                         }
 
                         if resApi != nil {
@@ -92,26 +116,62 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
         return response
 }
 
-func main() {
-        if _, err := os.Stat("serverdata"); err != nil {
-                err = os.Mkdir("./serverdata", 0755)
+func mkdirs(path string) {
+        if _, err := os.Stat(path); err != nil {
+                err = os.MkdirAll(path, 0755)
                 utils.Panic(err)
         }
+}
 
-        var port int = 3000
-        if len(os.Args) == 2 {
-                if p, err := strconv.Atoi(os.Args[1]); err == nil {
-                        port = p
-                }
+func showUsage() {
+        fmt.Println("Usage:", os.Args[0], "<port> <mandy api key>")
+}
+
+func main() {
+        if len(os.Args) != 3 {
+                showUsage()
+                return
         }
 
-        utils.LogI(SERVER_TAG, fmt.Sprintf("Starting server at port %d", port))
-
-        deviceData = api.NewDeviceData()
-        if deviceData == nil {
-                panic("Can't open devicedate db")
+        port, err := strconv.Atoi(os.Args[1])
+        if err != nil {
+                showUsage()
+                return
         }
+
+        // Create necessary folders
+        mkdirs(utils.KERNELADIUTOR)
+        mkdirs(utils.MANDY)
 
         var server *miniserver.MiniServer = miniserver.NewServer(port)
-        server.StartListening(onConnect)
+
+        c := make(chan os.Signal, 1)
+        cleanup := make(chan bool)
+        signal.Notify(c, os.Interrupt)
+        go func() {
+                for sig := range c {
+                        utils.LogI(SERVER_TAG, fmt.Sprintf("Captured %s, killing...", sig))
+                        server.StopListening()
+                        mandyStatus.Kill()
+
+                        cleanup <- true
+                }
+        }()
+
+        kaDeviceData = kerneladiutor.NewDeviceData()
+        if kaDeviceData == nil {
+                panic("Can't open kerneladiutor devicedata db")
+        }
+
+        mandyUserData = mandy.NewUserData()
+        if mandyUserData == nil {
+                panic("Can't open mandy userdata db")
+        }
+
+        mandyStatus = mandy.MandyInit(true, os.Args[2], mandyUserData)
+
+        utils.LogI(SERVER_TAG, fmt.Sprintf("Starting server at port %d", port))
+        go server.StartListening(onConnect)
+
+        <-cleanup
 }
