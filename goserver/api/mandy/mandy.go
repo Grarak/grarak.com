@@ -303,6 +303,7 @@ func (mandyApi MandyApi) scriptMerge() *miniserver.Response {
 
         for _, project := range mandyApi.mandyStatus.AospaProjects {
                 script += "\n"
+                script += "git -C " + project.Path + " remote add github " + mandy.GITHUB_HTTP + "/" + project.Name + "\n"
                 script += "git -C " + project.Path + " fetch github\n"
                 script += "git -C " + project.Path + " reset --hard github/$BRANCH\n"
                 script += "echo \"" + project.Name + " checked out\"\n"
@@ -318,7 +319,7 @@ func (mandyApi MandyApi) scriptDeleteBranch() *miniserver.Response {
 
         for _, project := range mandyApi.mandyStatus.AospaProjects {
                 script += "\n"
-                script += "git -C " + project.Path + " push github $BRANCH --delete\n"
+                script += "git -C " + project.Path + " push git@github.com:" + project.Name + ".git $BRANCH --delete\n"
                 script += "echo \"" + project.Name + " deleted\"\n"
         }
 
