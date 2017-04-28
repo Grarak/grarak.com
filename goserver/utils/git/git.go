@@ -60,6 +60,16 @@ func (git Git) AddRemote(name, url string) error {
         return err
 }
 
+func (git Git) ReplaceRemote(name, url string) error {
+        git.RemoveRemote(name)
+        return git.AddRemote(name, url)
+}
+
+func (git Git) RemoveRemote(name string) error {
+        _, _, err := git.run("remote rm " + name)
+        return err
+}
+
 func (git Git) MergeBranch(remote, branch string) (int, error) {
         _, status, err := git.run("merge " + remote + "/" + branch + " --no-edit")
         return status, err

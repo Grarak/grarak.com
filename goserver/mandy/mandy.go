@@ -660,17 +660,11 @@ cafLoop:
                 }
 
                 // Add caf remote
-                err = aospaProject.git.AddRemote("caf",
+                aospaProject.git.ReplaceRemote("caf",
                         buildGitUrl(aospaProject.cafProject, aospaProject.cafRemote))
-                if err == nil {
-                        utils.LogI(MANDY_TAG, "Added caf remote to "+aospaProject.project.Name)
-                }
 
                 // Add gerrit remote
-                err = aospaProject.git.AddRemote("gerrit", GERRIT_URL+"/"+aospaProject.Name)
-                if err == nil {
-                        utils.LogI(MANDY_TAG, "Added gerrit remote to "+aospaProject.project.Name)
-                }
+                aospaProject.git.ReplaceRemote("gerrit", GERRIT_URL+"/"+aospaProject.Name)
 
                 aospaProject.git.SetName(MANDY_NAME)
                 aospaProject.git.SetEmail(MANDY_EMAIL)
