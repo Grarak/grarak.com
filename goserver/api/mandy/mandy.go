@@ -344,7 +344,7 @@ func (mandyApi MandyApi) mandyApiv1() *miniserver.Response {
                 break
         case "account/firebasekey":
                 if mandyApi.client.Method == http.MethodPost && len(mandyApi.client.Request) > 0 {
-                        response = mandyApi.accountSignin()
+                        response = mandyApi.accountFirebaseKey()
                 }
                 break
         case "account/get":

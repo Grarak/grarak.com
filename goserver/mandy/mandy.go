@@ -71,7 +71,7 @@ type MandyStatus struct {
         Notification   *Notification `json:"-"`
         firebaseApiKey string `json:"-"`
         killed         bool `json:"-"`
-        manifestGit    git.Git `json:"-"`
+        manifestGit    *git.Git `json:"-"`
 }
 
 type MandyErr string
@@ -178,7 +178,7 @@ func startSubmitting() {
 
                 status, err := aospaProject.git.MergeBranch("origin", aospaProject.revision)
                 if status != 0 || err != nil {
-                        utils.LogE(MANDY_TAG, "Couldn't pull "+aospaProject.Name+", skipping submission")
+                        utils.LogE(MANDY_TAG, "Couldn't merge with origin "+aospaProject.Name+", skipping submission")
                         aospaProject.Conflicted = true
                         successful = false
                         continue
@@ -393,7 +393,7 @@ trackingLoop:
                                 }
 
                                 if latestTag != mandyStatus.ManifestTag {
-                                        if !mandyStatus.Mergeable {
+                                        if !mandyStatus.Mergeable && !mandyStatus.Merged && !mandyStatus.Submitting {
                                                 var mergable bool = true
                                                 // Check if other repos have the tag as well
                                                 for _, aospaProject := range mandyStatus.AospaProjects {
@@ -526,35 +526,37 @@ func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *Mand
                 mandyStatus.manifestGit.Exit()
         }
 
-        manifestGit := newMandyGit(AOSPA_MANIFEST_NAME, AOSPA_MANIFEST_URL)
-        mandyStatus.manifestGit = manifestGit
+        if mandyStatus.manifestGit == nil {
+                mandyStatus.manifestGit = &git.Git{}
+                *mandyStatus.manifestGit = newMandyGit(AOSPA_MANIFEST_NAME, AOSPA_MANIFEST_URL)
+        }
         mandyStatus.firebaseApiKey = firebaseApiKey
 
-        if !manifestGit.Valid() {
-                utils.LogI(MANDY_TAG, "Cloning "+manifestGit.String())
-                buf, err := manifestGit.Clone(AOSPA_BRANCH)
+        if !mandyStatus.manifestGit.Valid() {
+                utils.LogI(MANDY_TAG, "Cloning "+mandyStatus.manifestGit.String())
+                buf, err := mandyStatus.manifestGit.Clone(AOSPA_BRANCH)
                 if err != nil {
                         return mandyStatus
                 }
                 fmt.Println(string(buf))
 
-                utils.LogI(MANDY_TAG, "Successfully cloned "+manifestGit.String())
+                utils.LogI(MANDY_TAG, "Successfully cloned "+mandyStatus.manifestGit.String())
         } else {
-                err := manifestGit.Pull("origin", AOSPA_BRANCH)
+                err := mandyStatus.manifestGit.Pull("origin", AOSPA_BRANCH)
                 if err != nil {
                         return mandyStatus
                 }
         }
 
-        manifestDefaultBuf, err := ioutil.ReadFile(manifestGit.GetPath() + "/" + MANIFEST_DEFAULT)
+        manifestDefaultBuf, err := ioutil.ReadFile(mandyStatus.manifestGit.GetPath() + "/" + MANIFEST_DEFAULT)
         if err != nil {
-                utils.LogE(MANDY_TAG, manifestGit.String()+" damaged, cloning again")
+                utils.LogE(MANDY_TAG, mandyStatus.manifestGit.String()+" damaged, cloning again")
                 MandyInit(initialize, firebaseApiKey, userdata)
         }
 
-        aospaManifestBuf, err := ioutil.ReadFile(manifestGit.GetPath() + "/" + MANIFEST_AOSPA)
+        aospaManifestBuf, err := ioutil.ReadFile(mandyStatus.manifestGit.GetPath() + "/" + MANIFEST_AOSPA)
         if err != nil {
-                utils.LogE(MANDY_TAG, manifestGit.String()+" damaged, cloning again")
+                utils.LogE(MANDY_TAG, mandyStatus.manifestGit.String()+" damaged, cloning again")
                 MandyInit(initialize, firebaseApiKey, userdata)
         }
 
