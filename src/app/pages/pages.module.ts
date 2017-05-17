@@ -20,7 +20,7 @@ import { PageParentComponent } from './pageparent.component'
             { path: 'kerneladiutor/id/:id', component: KernelAdiutorDeviceInfoComponent },
             { path: 'kerneladiutor', redirectTo: 'kerneladiutor/page/1' },
             { path: '404', component: NotFoundComponent },
-            { path: '**', redirectTo: '404'  },
+            { path: '**', redirectTo: '404' },
         ], {}),
         ServicesModule,
         ViewsModule

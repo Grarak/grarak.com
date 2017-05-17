@@ -1,5 +1,5 @@
 import { Component, NgZone, ViewChild, HostListener } from '@angular/core'
-import { Router } from '@angular/router'
+import { Router, NavigationStart } from '@angular/router'
 
 import { NavDrawerComponent } from './views/navdrawer.component'
 
@@ -71,16 +71,17 @@ export class AppComponent {
     ngOnInit() {
         this.onWindowResize(window.innerWidth)
         var event = this.router.events.subscribe((data) => {
+            this.toolbarTitle = null
             for (let item of this.navbarItems) {
-                if ((item.options.exact && data.url == item.route)
-                    || (!item.options.exact && data.url.startsWith(item.route))) {
+                var route = <NavigationStart>data
+                if ((item.options.exact && route.url == item.route)
+                    || (!item.options.exact && route.url.startsWith(item.route))) {
                     this.toolbarTitle = item.title
                 }
             }
             if (this.toolbarTitle == null) {
                 this.toolbarTitle = "Not found"
             }
-            event.unsubscribe()
         })
     }
 

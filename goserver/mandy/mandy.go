@@ -34,6 +34,11 @@ const GERRIT_URL = "ssh://" + MANDY_USERNAME + "@gerrit.aospa.co:29418"
 var projectsBlackList = []string{
 }
 
+// Whitelist for debugging
+// As long it's empty we will accept any repos
+var projectsWhiteList = []string{
+}
+
 type AospaProject struct {
         Path       string `json:"-"`
         project    Project `json:"-"`
@@ -81,6 +86,11 @@ func (e MandyErr) Error() string {
 }
 
 var mandyStatus *MandyStatus
+
+func repoAccepted(repo string) bool {
+        return !utils.SliceContains(repo, projectsBlackList) &&
+                (len(projectsWhiteList) == 0 || utils.SliceContains(repo, projectsWhiteList))
+}
 
 func newMandyGit(path, url string) git.Git {
         return git.NewGit("mandy", path, url)
@@ -522,8 +532,6 @@ func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *Mand
                 mandyStatus = &MandyStatus{}
                 *mandyStatus = getMandyStatus()
                 mandyStatus.Notification = NewNotification(firebaseApiKey, userdata)
-        } else {
-                mandyStatus.manifestGit.Exit()
         }
 
         if mandyStatus.manifestGit == nil {
@@ -591,8 +599,7 @@ cafLoop:
                 for _, aospaProject := range aospaManifest.Projects {
                         if cafProject.Path == aospaProject.Path {
                                 for _, removedProject := range aospaManifest.RemoveProjects {
-                                        if cafProject.Name == removedProject.Name &&
-                                                !utils.SliceContains(aospaProject.Name, projectsBlackList) {
+                                        if cafProject.Name == removedProject.Name && repoAccepted(aospaProject.Name) {
 
                                                 // Track down the remote
                                                 // So we can easily access its name and url

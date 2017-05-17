@@ -1,10 +1,10 @@
-import { ProjectFolderPage } from './app.po';
+import { ProjectPage } from './app.po';
 
-describe('project-folder App', function() {
-  let page: ProjectFolderPage;
+describe('project App', () => {
+  let page: ProjectPage;
 
   beforeEach(() => {
-    page = new ProjectFolderPage();
+    page = new ProjectPage();
   });
 
   it('should display message saying app works', () => {
