@@ -1,14 +1,15 @@
-import { Component, NgZone, ViewChild, HostListener } from '@angular/core'
-import { MdSidenav } from '@angular/material'
+import {Component, NgZone, ViewChild, HostListener} from '@angular/core'
+import {MdSidenav} from '@angular/material'
 
-import { Utils } from '../utils/utils'
+import {Utils} from '../utils/utils'
 
 @Component({
     selector: `navdrawer-view`,
     template: `
         <md-sidenav-container>
 
-            <md-sidenav #sidenav [mode]="containerMode" [style.width]="navbarWidth" [opened]="windowSize > 700 || navbarOpened">
+            <md-sidenav #sidenav [mode]="containerMode" [style.width]="navbarWidth"
+                        [opened]="windowSize > 700 || navbarOpened">
 
                 <img [src]="profile_pic" [style.width]="navbarWidth">
 
@@ -25,7 +26,7 @@ import { Utils } from '../utils/utils'
         </md-sidenav-container>
     `,
     styles: [
-        `
+            `
             md-sidenav-container {
                 position: absolute;
                 height: 100%;
@@ -62,14 +63,14 @@ export class NavDrawerComponent {
     onWindowResize(size: number) {
         this.windowSize = size
         if (size > 700) {
-            this.containerMode = "side"
-            this.navbarWidth = "250px"
+            this.containerMode = 'side'
+            this.navbarWidth = '250px'
             this.navbarOpened = true
             if (this.sideNav != null && this.sideNav._isClosed) {
                 this.sideNav.toggle()
             }
         } else {
-            this.containerMode = "over"
+            this.containerMode = 'over'
             this.navbarWidth = (size <= 480 ? size - (size * 0.17) : size / 2) + "px"
         }
     }

@@ -1,14 +1,14 @@
 import 'hammerjs';
 
-import { BrowserModule } from '@angular/platform-browser'
-import { NgModule } from '@angular/core'
-import { FormsModule } from '@angular/forms'
-import { HttpModule } from '@angular/http'
+import {BrowserModule} from '@angular/platform-browser'
+import {NgModule} from '@angular/core'
+import {FormsModule} from '@angular/forms'
+import {HttpModule} from '@angular/http'
 
-import { AppComponent } from './app.component'
+import {AppComponent} from './app.component'
 
-import { PagesModule } from './pages/pages.module'
-import { ViewsModule } from './views/views.module'
+import {PagesModule} from './pages/pages.module'
+import {ViewsModule} from './views/views.module'
 
 @NgModule({
     declarations: [
@@ -21,8 +21,8 @@ import { ViewsModule } from './views/views.module'
         PagesModule,
         ViewsModule
     ],
-    providers: [
-    ],
+    providers: [],
     bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+}

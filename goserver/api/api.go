@@ -3,5 +3,5 @@ package api
 import "../miniserver"
 
 type Interface interface {
-        GetResponse() *miniserver.Response
+	GetResponse() *miniserver.Response
 }

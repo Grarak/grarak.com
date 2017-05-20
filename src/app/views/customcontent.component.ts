@@ -1,4 +1,4 @@
-import { Component } from '@angular/core'
+import {Component} from '@angular/core'
 
 @Component({
     selector: `card-title,card-content,navbar-content,navbar-page-content`,
@@ -6,4 +6,5 @@ import { Component } from '@angular/core'
         <ng-content></ng-content>
     `
 })
-export class CustomComponent { }
+export class CustomComponent {
+}

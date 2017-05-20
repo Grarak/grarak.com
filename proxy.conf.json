@@ -1,6 +1,6 @@
 {
-    "/kerneladiutor/api": {
-        "target": "http://localhost:3000",
-        "secure": false
-    }
+  "/kerneladiutor/api": {
+    "target": "http://localhost:3000",
+    "secure": false
+  }
 }

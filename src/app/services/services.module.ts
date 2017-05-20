@@ -1,10 +1,11 @@
-import { NgModule } from '@angular/core'
+import {NgModule} from '@angular/core'
 
-import { KernelAdiutorService } from './kerneladiutor.service'
+import {KernelAdiutorService} from './kerneladiutor.service'
 
 @NgModule({
     providers: [
         KernelAdiutorService
     ]
 })
-export class ServicesModule { }
+export class ServicesModule {
+}

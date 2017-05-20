@@ -1,9 +1,9 @@
-import { Component, NgZone, ViewChild, HostListener } from '@angular/core'
-import { Router, NavigationStart } from '@angular/router'
+import {Component, ViewChild, HostListener} from '@angular/core'
+import {Router, NavigationStart} from '@angular/router'
 
-import { NavDrawerComponent } from './views/navdrawer.component'
+import {NavDrawerComponent} from './views/navdrawer.component'
 
-import { Utils } from './utils/utils'
+import {Utils} from './utils/utils'
 
 @Component({
     selector: 'app-view',
@@ -13,7 +13,8 @@ import { Utils } from './utils/utils'
                 <navbar-content>
                     <md-list>
                         <md-list-item *ngFor="let item of navbarItems">
-                            <a routerLink="{{item.route}}" routerLinkActive="selected" [routerLinkActiveOptions]="item.options" (click)="onNavbarItemClicked(item)">
+                            <a routerLink="{{item.route}}" routerLinkActive="selected"
+                               [routerLinkActiveOptions]="item.options" (click)="onNavbarItemClicked(item)">
                                 <p style="margin-top: 0">{{item.title}}</p>
                             </a>
                         </md-list-item>
@@ -21,7 +22,8 @@ import { Utils } from './utils/utils'
                 </navbar-content>
 
                 <navbar-page-content>
-                    <toolbar-view [title]="toolbarTitle" (menuClicked)="onToolbarMenuClicked()" [menuDisplay]="menuDisplay">
+                    <toolbar-view [title]="toolbarTitle" (menuClicked)="onToolbarMenuClicked()"
+                                  [menuDisplay]="menuDisplay">
                         Page
                     </toolbar-view>
 
@@ -31,14 +33,16 @@ import { Utils } from './utils/utils'
         </div>
     `,
     styles: [
-        `
+            `
             a {
                 color: rgba(0, 0, 0, .6);
                 text-decoration: none;
             }
+
             a:hover {
                 color: black;
             }
+
             a:visited {
                 color: rgba(0, 0, 0, .7);
             }
@@ -53,8 +57,8 @@ import { Utils } from './utils/utils'
 export class AppComponent {
 
     navbarItems: any[] = [
-        { route: "/", title: "About me", options: { exact: true } },
-        { route: "/kerneladiutor", title: "Kernel Adiutor", options: { exact: false } }
+        {route: '/', title: 'About me', options: {exact: true}},
+        {route: '/kerneladiutor', title: 'Kernel Adiutor', options: {exact: false}}
     ]
 
     profile_pic: string = Utils.getAsset('profile_pic.jpg')
@@ -66,21 +70,22 @@ export class AppComponent {
     menuDisplay: string
     toolbarTitle: string
 
-    constructor(private router: Router) { }
+    constructor(private router: Router) {
+    }
 
     ngOnInit() {
         this.onWindowResize(window.innerWidth)
-        var event = this.router.events.subscribe((data) => {
+        this.router.events.subscribe((data) => {
             this.toolbarTitle = null
-            for (let item of this.navbarItems) {
-                var route = <NavigationStart>data
-                if ((item.options.exact && route.url == item.route)
+            for (const item of this.navbarItems) {
+                const route = <NavigationStart>data
+                if ((item.options.exact && route.url === item.route)
                     || (!item.options.exact && route.url.startsWith(item.route))) {
                     this.toolbarTitle = item.title
                 }
             }
             if (this.toolbarTitle == null) {
-                this.toolbarTitle = "Not found"
+                this.toolbarTitle = 'Not found'
             }
         })
     }

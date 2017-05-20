@@ -1,6 +1,6 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import {Component, EventEmitter, Output} from '@angular/core'
 
-import { Utils } from '../utils/utils'
+import {Utils} from '../utils/utils'
 
 @Component({
     selector: `toolbar-view`,
@@ -15,7 +15,7 @@ import { Utils } from '../utils/utils'
         </div>
     `,
     styles: [
-        `
+            `
             .shadow {
                 box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
             }
@@ -34,7 +34,7 @@ import { Utils } from '../utils/utils'
 export class ToolbarComponent {
 
     title: string
-    menuDisplay: string = "none"
+    menuDisplay = 'none'
 
     @Output() menuClicked = new EventEmitter()
 

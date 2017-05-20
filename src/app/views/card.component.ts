@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
+import {Component, ViewChild, ElementRef} from '@angular/core';
 
 @Component({
     selector: `card-view`,
@@ -20,7 +20,7 @@ export class CardComponent {
     @ViewChild('content') contentView: ElementRef
 
     ngAfterViewInit() {
-        if (this.titleView.nativeElement.children.length == 0) {
+        if (this.titleView.nativeElement.children.length === 0) {
             this.titleView.nativeElement.style.display = 'none'
         }
         if (this.contentView.nativeElement.children.length === 0) {
