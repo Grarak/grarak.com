@@ -96,13 +96,15 @@ func (mandyApi MandyApi) accountSignup() *miniserver.Response {
 
 func (mandyApi MandyApi) accountSignin() *miniserver.Response {
 	if user, err := mandy.NewUser(mandyApi.client.Request); err == nil {
-		user, statuscode := mandyApi.userdata.GetUserWithPassword(user)
+		realuser, statuscode := mandyApi.userdata.GetUserWithPassword(user)
 		if statuscode != mandy.CODE_NO_ERROR {
 			return mandyApi.createResponse(statuscode)
 		}
 
-		utils.LogI(MANDY_TAG, user.Name+" signed in")
-		return mandyApi.client.ResponseBody(user.ToJson())
+		utils.LogI(MANDY_TAG, realuser.Name+" signed in")
+
+		mandyApi.userdata.UpdateFirebaseKey(realuser.ApiToken, user.FirebaseKey)
+		return mandyApi.client.ResponseBody(realuser.ToJson())
 	}
 
 	return mandyApi.createResponse(mandy.CODE_UNKNOWN_ERROR)
@@ -111,7 +113,7 @@ func (mandyApi MandyApi) accountSignin() *miniserver.Response {
 func (mandyApi MandyApi) accountFirebaseKey() *miniserver.Response {
 	if apiToken := mandyApi.getApiFromQuery(); !utils.StringEmpty(apiToken) {
 		if userKey, err := mandy.NewUser(mandyApi.client.Request); err == nil {
-			err := mandyApi.userdata.UpdateFirebaseKey(apiToken, userKey.FirebaseKey[0])
+			err := mandyApi.userdata.UpdateFirebaseKey(apiToken, userKey.FirebaseKey)
 			if err != nil {
 				return mandyApi.createResponse(mandy.CODE_API_INVALID)
 			}

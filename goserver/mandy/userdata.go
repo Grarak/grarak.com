@@ -260,12 +260,14 @@ func (userdata *UserData) Remove(requester *User, user string) error {
 	return UserDataErr("Can't find user " + user)
 }
 
-func (userdata *UserData) UpdateFirebaseKey(apiToken, key string) error {
+func (userdata *UserData) UpdateFirebaseKey(apiToken string, keys []string) error {
 	user := userdata.FindUserByApi(apiToken)
 	if user != nil {
-		if !utils.SliceContains(key, user.FirebaseKey) {
-			user.FirebaseKey = append(user.FirebaseKey, key)
-			userdata.UpdateUser(user)
+		for _, key := range keys {
+			if !utils.SliceContains(key, user.FirebaseKey) {
+				user.FirebaseKey = append(user.FirebaseKey, key)
+				userdata.UpdateUser(user)
+			}
 		}
 		return nil
 	}
