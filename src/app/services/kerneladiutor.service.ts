@@ -33,7 +33,7 @@ export class KernelAdiutorDevice {
     }
 
     getVendor(): string {
-        let vendor = <string>this.device.vendor
+        const vendor = <string>this.device.vendor
         return vendor.charAt(0).toUpperCase() + vendor.substr(1)
     }
 

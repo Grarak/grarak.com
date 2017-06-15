@@ -122,7 +122,9 @@ func getMandyStatus() MandyStatus {
 
 	var mandyStatus MandyStatus
 	err = json.Unmarshal(buf, &mandyStatus)
-	utils.Panic(err)
+	if err != nil {
+		return MandyStatus{}
+	}
 
 	return mandyStatus
 }
@@ -131,9 +133,9 @@ func (mandyStatus *MandyStatus) Kill() {
 	if mandyStatus != nil {
 		mandyStatus.killed = true
 		for _, aospaProject := range mandyStatus.AospaProjects {
-			aospaProject.git.Kill()
+			aospaProject.git.Exit()
 		}
-		mandyStatus.manifestGit.Kill()
+		mandyStatus.manifestGit.Exit()
 	}
 }
 

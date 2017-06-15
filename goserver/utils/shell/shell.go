@@ -76,6 +76,7 @@ func (sh Shell) Kill() {
 
 func (sh Shell) Exit() {
 	if sh.writer != nil {
+		sh.cmd.Process.Wait()
 		io.WriteString(sh.writer, "exit\n")
 
 		sh.cmd.Process.Wait()

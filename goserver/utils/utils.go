@@ -3,7 +3,7 @@ package utils
 import (
 	"encoding/base64"
 	"os"
-	"sort"
+	"fmt"
 )
 
 const SERVERDATA = "./serverdata"
@@ -110,25 +110,12 @@ func Decode(text string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(text)
 }
 
-type sorter struct {
-	array              []string
-	minmaxDeterminator func(i, j int) bool
+func ToURLBase64(buf []byte) string {
+	return base64.URLEncoding.EncodeToString(buf)
 }
 
-func (sorter sorter) Len() int {
-	return len(sorter.array)
-}
-
-func (sorter sorter) Swap(i, j int) {
-	sorter.array[i], sorter.array[j] = sorter.array[j], sorter.array[i]
-}
-
-func (sorter sorter) Less(i, j int) bool {
-	return sorter.minmaxDeterminator(i, j)
-}
-
-func SimpleSort(array []string, minmaxDeterminator func(i, j int) bool) {
-	sort.Sort(sorter{array, minmaxDeterminator})
+func FromURLBase64(text string) ([]byte, error) {
+	return base64.URLEncoding.DecodeString(text)
 }
 
 func InsertToSlice(item string, slice []string, index int) []string {
@@ -161,4 +148,70 @@ func SliceContains(item string, slice []string) bool {
 		}
 	}
 	return false
+}
+
+func FindinSortedList(sortedlist []interface{},
+	equals, biggerthan func(i, j interface{}) bool,
+	item interface{},
+	reversed bool) (int, error) {
+	return _findinSortedList(sortedlist, equals,
+		biggerthan, item, 0, len(sortedlist)-1,
+		reversed)
+}
+
+func _findinSortedList(sortedlist []interface{},
+	equals, biggerthan func(i, j interface{}) bool,
+	item interface{},
+	min, max int, reversed bool) (int, error) {
+
+	if len(sortedlist) == 0 {
+		return 0, GenericError(fmt.Sprintf("Couldn't find %s", item))
+	}
+
+	// Make sure if id actually exists
+	// otherwise it will end in an endless loop
+	if min >= max {
+		if equals(item, sortedlist[min]) {
+			return min, nil
+		}
+		return min, GenericError(fmt.Sprintf("Couldn't find %s", item))
+	}
+
+	if max-min == 1 {
+		if equals(item, sortedlist[min]) {
+			return min, nil
+		}
+		if equals(item, sortedlist[max]) {
+			return max, nil
+		}
+		if reversed && biggerthan(item, sortedlist[min]) {
+			return min, GenericError(fmt.Sprintf("Couldn't find %s", item))
+		} else if !reversed && biggerthan(item, sortedlist[max]) {
+			return max, GenericError(fmt.Sprintf("Couldn't find %s", item))
+		} else {
+			if reversed {
+				return max, GenericError(fmt.Sprintf("Couldn't find %s", item))
+			} else {
+				return min, GenericError(fmt.Sprintf("Couldn't find %s", item))
+			}
+		}
+	}
+
+	index := (max-min)/2 + min
+	middleItem := sortedlist[index]
+
+	searchleft := true
+	if biggerthan(item, middleItem) {
+		searchleft = false
+	} else if equals(item, middleItem) {
+		return index, nil
+	}
+
+	if searchleft != reversed {
+		return _findinSortedList(sortedlist, equals, biggerthan,
+			item, min, index-1, reversed)
+
+	}
+	return _findinSortedList(sortedlist, equals, biggerthan,
+		item, index+1, max, reversed)
 }

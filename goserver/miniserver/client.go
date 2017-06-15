@@ -6,9 +6,9 @@ import (
 )
 
 type Client struct {
-	Url, Method string
-	Request     []byte
-	Queries     map[string][]string
+	Url, Method, IPAddr string
+	Request             []byte
+	Queries             map[string][]string
 }
 
 func newClient(request *http.Request) *Client {
@@ -16,11 +16,24 @@ func newClient(request *http.Request) *Client {
 
 	body, _ := ioutil.ReadAll(request.Body)
 
+	// Extract the ip address
+	addChar := false
+	addrChars := []byte(request.RemoteAddr)
+	var ipAddrBuf []byte
+	for i := len(addrChars) - 1; i >= 0; i-- {
+		if addChar {
+			ipAddrBuf = append([]byte{addrChars[i]}, ipAddrBuf...)
+		} else if addrChars[i] == ':' {
+			addChar = true
+		}
+	}
+
 	return &Client{
-		Url:     request.URL.Path,
-		Method:  request.Method,
-		Request: body,
-		Queries: request.Form,
+		request.URL.Path,
+		request.Method,
+		string(ipAddrBuf),
+		body,
+		request.Form,
 	}
 }
 

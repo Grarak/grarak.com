@@ -11,8 +11,6 @@ import {Utils} from '../utils/utils'
             <md-sidenav #sidenav [mode]="containerMode" [style.width]="navbarWidth"
                         [opened]="windowSize > 700 || navbarOpened">
 
-                <img [src]="profile_pic" [style.width]="navbarWidth">
-
                 <div id="navbar-content">
                     <ng-content select="navbar-content"></ng-content>
                 </div>
@@ -43,8 +41,6 @@ import {Utils} from '../utils/utils'
 export class NavDrawerComponent {
 
     @ViewChild('sidenav') sideNav: MdSidenav
-
-    profile_pic: string = Utils.getAsset('profile_pic.jpg')
 
     containerMode: string
     navbarWidth: string

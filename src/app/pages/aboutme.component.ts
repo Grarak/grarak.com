@@ -1,4 +1,4 @@
-import {Component, HostListener} from '@angular/core'
+import {Component} from '@angular/core'
 
 import {Utils} from '../utils/utils'
 
@@ -10,11 +10,13 @@ import {Utils} from '../utils/utils'
                 <card-title><span style="font-size:x-large;">Welcome</span></card-title>
                 <card-content>
                     <div style="font-size:larger;color:rgba(0,0,0,.7)">
-                        Hello! I'm Willi Ye aka Grarak, a 19 year old student at Vienna University of
+                        Hello! I'm Willi Ye aka Grarak, a 20 year old student at Vienna University of
                         Technology.<br><br>
 
                         In my free time I contribute to OSS projects such as
-                        <a target="_blank" href="https://github.com/CyanogenMod">CyanogenMod</a>/<a target="_blank" href="https://github.com/LineageOS">LineageOS</a>.
+                        <a target="_blank" href="https://github.com/CyanogenMod">CyanogenMod</a>/<a target="_blank"
+                                                                                                    href="https://github.com/LineageOS">LineageOS</a>
+                        and <a target="_blank" href="https://github.com/AOSPA">AOSPA</a>.
                         All my personal projects are uploaded on github as well. You can find a link to my profile down
                         below.<br><br>
 

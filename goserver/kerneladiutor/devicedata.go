@@ -10,6 +10,7 @@ import (
 
 	"../utils"
 	"time"
+	"sort"
 )
 
 type DeviceData struct {
@@ -46,7 +47,7 @@ func NewDeviceData() *DeviceData {
 		dData.SortedScores = append(dData.SortedScores, key)
 	}
 
-	utils.SimpleSort(dData.SortedScores, func(i, j int) bool {
+	sort.Slice(dData.SortedScores, func(i, j int) bool {
 		return dData.Infos[dData.SortedScores[i]].Score > dData.Infos[dData.SortedScores[j]].Score
 	})
 
@@ -127,40 +128,25 @@ func (dData DeviceData) insertDevice(newDevice *DeviceInfo, sortedList []string)
 	return sortedList
 }
 
-func (dData DeviceData) _findDevice(searchDevice *DeviceInfo, sortedList []string, min, max int) (int, error) {
-	if len(sortedList) == 0 {
-		return 0, utils.GenericError(fmt.Sprintf("Couldn't find %s", searchDevice.AndroidID))
-	}
-
-	length := max - min
-	middle := length / 2
-	index := middle + min
-
-	middleDevice := dData.Infos[sortedList[index]]
-
-	// Make sure if id actually exists
-	// otherwise it will end in an endless loop
-	if min >= max {
-		if sortedList[min] == searchDevice.AndroidID {
-			return min, nil
-		}
-		return min, utils.GenericError(fmt.Sprintf("Couldn't find %s", searchDevice.AndroidID))
-	}
-
-	if searchDevice.Score > middleDevice.Score {
-		return dData._findDevice(searchDevice, sortedList, min, index-1)
-	} else if searchDevice.Score < middleDevice.Score {
-		return dData._findDevice(searchDevice, sortedList, index+1, max)
-	}
-
-	if searchDevice.AndroidID == sortedList[index] {
-		return index, nil
-	}
-	return index, utils.GenericError(fmt.Sprintf("Couldn't find %s", searchDevice.AndroidID))
-}
-
 func (dData DeviceData) findDevice(newDevice *DeviceInfo, sortedList []string) (int, error) {
-	return dData._findDevice(newDevice, sortedList, 0, len(sortedList)-1)
+	bufSlice := make([]interface{}, len(sortedList))
+	for index := range sortedList {
+		bufSlice[index] = sortedList[index]
+	}
+
+	return utils.FindinSortedList(bufSlice, func(i, j interface{}) bool {
+		device, ok := i.(*DeviceInfo)
+		if ok {
+			return device.AndroidID == dData.Infos[j.(string)].AndroidID
+		}
+		return dData.Infos[i.(string)].AndroidID == dData.Infos[j.(string)].AndroidID
+	}, func(i, j interface{}) bool {
+		device, ok := i.(*DeviceInfo)
+		if ok {
+			return device.Score > dData.Infos[j.(string)].Score
+		}
+		return dData.Infos[i.(string)].Score > dData.Infos[j.(string)].Score
+	}, newDevice, true)
 }
 
 func (dData *DeviceData) UpdateDevice(dInfo *DeviceInfo) {

@@ -9,7 +9,6 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 	"crypto/sha256"
 	"crypto/rand"
-	"encoding/base64"
 	"reflect"
 	"strings"
 )
@@ -66,16 +65,8 @@ func generateSalt() []byte {
 	return buf
 }
 
-func toURLBase64(buf []byte) string {
-	return base64.URLEncoding.EncodeToString(buf)
-}
-
-func fromURLBase64(text string) ([]byte, error) {
-	return base64.URLEncoding.DecodeString(text)
-}
-
 func (userdata *UserData) generateApiToken() string {
-	token := toURLBase64(generateSalt())
+	token := utils.ToURLBase64(generateSalt())
 	if _, ok := userdata.apiTokens[token]; ok {
 		return userdata.generateApiToken()
 	}
@@ -112,8 +103,8 @@ func (userdata *UserData) InsertUser(user *User) (User, MandyErrorCode) {
 	salt := generateSalt()
 	hash := hashPassword([]byte(user.Password), salt)
 	user.Password = ""
-	user.Hash = toURLBase64(hash)
-	user.Salt = toURLBase64(salt)
+	user.Hash = utils.ToURLBase64(hash)
+	user.Salt = utils.ToURLBase64(salt)
 
 	// Generate api token
 	newToken := userdata.generateApiToken()
@@ -157,10 +148,10 @@ func (userdata *UserData) UpdateUser(user *User) {
 func (userdata *UserData) GetUserWithPassword(user *User) (User, MandyErrorCode) {
 	if apitoken, ok := userdata.users[strings.ToLower(user.Name)]; ok {
 		actualuser := userdata.apiTokens[apitoken]
-		salt, err := fromURLBase64(actualuser.Salt)
+		salt, err := utils.FromURLBase64(actualuser.Salt)
 		utils.Panic(err)
 		hash := hashPassword([]byte(user.Password), salt)
-		actualhash, err := fromURLBase64(actualuser.Hash)
+		actualhash, err := utils.FromURLBase64(actualuser.Hash)
 		utils.Panic(err)
 
 		if reflect.DeepEqual(actualhash, hash) {

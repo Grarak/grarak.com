@@ -58,7 +58,8 @@ export class AppComponent {
 
     navbarItems: any[] = [
         {route: '/', title: 'About me', options: {exact: true}},
-        {route: '/kerneladiutor', title: 'Kernel Adiutor', options: {exact: false}}
+        {route: '/kerneladiutor', title: 'Kernel Adiutor', options: {exact: false}},
+        {route: '/jodirect', title: 'JoDirect', options: {exact: false}}
     ]
 
     profile_pic: string = Utils.getAsset('profile_pic.jpg')

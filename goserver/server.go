@@ -11,8 +11,10 @@ import (
 	"./api"
 	"./api/kerneladiutor"
 	"./api/mandy"
+	"./api/jodirect"
 	"./kerneladiutor"
 	"./mandy"
+	"./jodirect"
 	"./miniserver"
 	"./utils"
 	"os/signal"
@@ -32,6 +34,7 @@ var supportedContentTypes [][]string = [][]string{
 var kaDeviceData *kerneladiutor.DeviceData
 var mandyUserData *mandy.UserData
 var mandyStatus *mandy.MandyStatus
+var joDirectData *jodirect.JoDirectData
 
 func onConnect(client *miniserver.Client) *miniserver.Response {
 	var response *miniserver.Response
@@ -102,6 +105,10 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
 					mandyStatus,
 				)
 				break
+			case "jodirect":
+				resApi = api_jodirect.NewJoDirectApi(client, path, apiVersion,
+					joDirectData)
+				break
 			}
 
 			if resApi != nil {
@@ -169,6 +176,8 @@ func main() {
 	}
 
 	mandyStatus = mandy.MandyInit(true, os.Args[2], mandyUserData)
+
+	joDirectData = jodirect.NewJoDirectData()
 
 	utils.LogI(SERVER_TAG, fmt.Sprintf("Starting server at port %d", port))
 	go server.StartListening(onConnect)

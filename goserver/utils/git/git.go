@@ -96,7 +96,10 @@ func (git Git) Pull(remote, branch string) error {
 
 func (git Git) Fetch(remote string) error {
 	_, status, err := git.run("fetch " + remote)
-	if status != 0 || err != nil {
+	if err != nil {
+		return err
+	}
+	if status != 0 {
 		return GitError("Can't fetch remote " + remote)
 	}
 
