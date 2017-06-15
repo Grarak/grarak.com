@@ -350,7 +350,6 @@ func trackCaf() {
 		{"5.5", "5.6"},
 	}
 
-trackingLoop:
 	for {
 
 		if !mandyStatus.Merged && !mandyStatus.Submitted && !mandyStatus.Reverting {
@@ -362,16 +361,14 @@ trackingLoop:
 				// Fetch caf
 				utils.LogI(MANDY_TAG, "Fetching "+aospaProject.Name)
 				err := aospaProject.git.Fetch("caf")
-				if err != nil {
-					break trackingLoop
-				}
+				utils.Panic(err)
+				utils.LogI(MANDY_TAG, "Fetched "+aospaProject.Name)
 
 				var latestTag string = mandyStatus.ManifestTag
 				var maxScore int = 0
 				tags, err := aospaProject.git.GetTags()
-				if err != nil {
-					break trackingLoop
-				}
+				utils.Panic(err)
+
 				for _, tag := range tags {
 					score := compareTag(mandyStatus.ManifestTagSplitted, splitTag(tag))
 					if score >= 400 {

@@ -3,6 +3,8 @@ package utils
 import (
 	"fmt"
 	"time"
+	"io/ioutil"
+	"os"
 )
 
 func LogI(tag, message string) {
@@ -14,5 +16,14 @@ func LogE(tag, message string) {
 }
 
 func log(t, tag, message string) {
-	fmt.Printf("%s: %s/%s: %s\n", time.Now().Format("2006-01-02 15:04:05"), t, tag, message)
+	text := fmt.Sprintf("%s: %s/%s: %s\n", time.Now().Format("2006-01-02 15:04:05"), t, tag, message)
+	fmt.Printf(text)
+
+	logFile, err := os.OpenFile(SERVERDATA+"/log.txt", os.O_APPEND|os.O_WRONLY, 0644)
+	if err == nil {
+		logFile.Write([]byte(text))
+		logFile.Close()
+	} else {
+		ioutil.WriteFile(SERVERDATA+"/log.txt", []byte(text), 0644)
+	}
 }
