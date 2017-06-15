@@ -360,6 +360,7 @@ trackingLoop:
 				}
 
 				// Fetch caf
+				utils.LogI(MANDY_TAG, "Fetching "+aospaProject.Name)
 				err := aospaProject.git.Fetch("caf")
 				if err != nil {
 					break trackingLoop
