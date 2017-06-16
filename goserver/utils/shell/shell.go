@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"strings"
 	"strconv"
+	"time"
 )
 
 type ShellErr string
@@ -19,6 +20,8 @@ type Shell struct {
 	cmd    *exec.Cmd
 	writer io.WriteCloser
 	reader io.ReadCloser
+
+	exit, running bool
 }
 
 func NewShell() Shell {
@@ -35,10 +38,15 @@ func NewShell() Shell {
 	}
 
 	cmd.Start()
-	return Shell{cmd, writer, reader}
+	return Shell{cmd, writer, reader,
+				 false, false}
 }
 
 func (sh Shell) Run(cmd []byte) ([]byte, int, error) {
+	if sh.exit {
+		return nil, -1, ShellErr("Shell is killed")
+	}
+	(&sh).running = true
 	callback := "/shellcallback/"
 	_, err := io.WriteString(sh.writer,
 		fmt.Sprintf("%s\necho $?%s\n", string(cmd), callback))
@@ -65,21 +73,25 @@ func (sh Shell) Run(cmd []byte) ([]byte, int, error) {
 		}
 		output = append(output, string(buf))
 	}
+	(&sh).running = false
 	return []byte(strings.Join(output, "\n")), status, nil
 }
 
-func (sh Shell) Kill() {
+func (sh Shell) kill() {
 	sh.cmd.Process.Kill()
 	sh.writer.Close()
 	sh.reader.Close()
 }
 
 func (sh Shell) Exit() {
+	(&sh).exit = true
+	for sh.running {
+		time.Sleep(time.Second / 3)
+	}
 	if sh.writer != nil {
-		sh.cmd.Process.Wait()
 		io.WriteString(sh.writer, "exit\n")
 
 		sh.cmd.Process.Wait()
-		sh.Kill()
+		sh.kill()
 	}
 }

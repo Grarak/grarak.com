@@ -608,7 +608,6 @@ func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *Mand
 	// Basically if the path equals it means we forked it
 	// Plus check if caf project got removed
 	var forkedProjects []*AospaProject
-cafLoop:
 	for _, cafProject := range manifest.Projects {
 		for _, aospaProject := range aospaManifest.Projects {
 			if cafProject.Path == aospaProject.Path {
@@ -643,24 +642,24 @@ cafLoop:
 								mandyStatus.ManifestTag,
 								false,
 							})
-						continue cafLoop
+						break
 					}
 				}
+				break
 			}
 		}
 	}
 
-	if len(mandyStatus.AospaProjects) != 0 {
-		for _, newProject := range forkedProjects {
-			for _, aospaProject := range mandyStatus.AospaProjects {
-				if newProject.Name == aospaProject.Name {
-					// Make sure we don't lose information
-					newProject.LatestTag = aospaProject.LatestTag
-					newProject.Conflicted = aospaProject.Conflicted
+	for _, aospaProject := range mandyStatus.AospaProjects {
+		for _, forkedProject := range forkedProjects {
+			if forkedProject.Name == aospaProject.Name {
+				// Make sure we don't lose information
+				forkedProject.LatestTag = aospaProject.LatestTag
+				forkedProject.Conflicted = aospaProject.Conflicted
 
-					// Also exit shell
-					aospaProject.git.Exit()
-				}
+				// Also exit shell
+				aospaProject.git.Exit()
+				break
 			}
 		}
 	}

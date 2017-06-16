@@ -177,7 +177,3 @@ func (git Git) String() string {
 func (git Git) Exit() {
 	git.shell.Exit()
 }
-
-func (git Git) Kill() {
-	git.shell.Kill()
-}
