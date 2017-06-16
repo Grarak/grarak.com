@@ -2,6 +2,7 @@ import {Component} from '@angular/core'
 import {ActivatedRoute, Params, Router} from '@angular/router'
 
 import {KernelAdiutorService, KernelAdiutorDevice} from '../../services/kerneladiutor.service'
+import {Utils} from '../../utils/utils'
 
 @Component({
     selector: `kerneladiutor-deviceinfo-page`,
@@ -47,12 +48,6 @@ export class KernelAdiutorDeviceInfoComponent {
                     }
                     timeAverage /= times.length
                     timeAverage *= 100
-                    const seconds: number = Math.floor(timeAverage % 60)
-                    const minutes: number = Math.floor(timeAverage / 60) % 60
-                    const hours: number = Math.floor(timeAverage / 60 / 60)
-                    let potentialsot: string = (hours > 9 ? hours : '0' + hours) + ':'
-                    potentialsot += (minutes > 9 ? minutes : '0' + minutes) + ':'
-                    potentialsot += seconds > 9 ? seconds : '0' + seconds
 
                     const deviceSettings = device.getCommands()
                     let settings = ''
@@ -72,7 +67,7 @@ export class KernelAdiutorDeviceInfoComponent {
                         ['Kernel Version', device.getKernelVersion()],
                         ['Board', device.getBoard()],
                         ['Fingerprint', device.getFingerprint()],
-                        ['Potential SOT', potentialsot + ' (when screen is always on)'],
+                        ['Potential SOT', Utils.formatSeconds(timeAverage) + ' (when screen is always on)'],
                         ['CPU Score', device.getCpu() + ' (lower is better)'],
                         ['CPU Information', device.getCpuInfo()],
                         ['Settings', settings]

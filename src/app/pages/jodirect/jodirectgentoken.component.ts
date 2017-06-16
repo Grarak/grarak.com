@@ -1,7 +1,9 @@
 import {Component} from '@angular/core'
 import {Router} from '@angular/router'
+import {Observable} from 'rxjs/Rx'
 
 import {JoDirectService, JoDirectToken} from '../../services/jodirect.service'
+import {Utils} from '../../utils/utils'
 
 @Component({
     selector: `jodirect-gen-token-page`,
@@ -40,6 +42,9 @@ export class JoDirectGenTokenComponent {
     statusDisplay = 'none'
     loadingDisplay = 'block'
 
+    timeleft: number
+    timer: any
+
     constructor(private router: Router,
                 private joDirectService: JoDirectService) {
     }
@@ -51,27 +56,33 @@ export class JoDirectGenTokenComponent {
                 this.statusDisplay = 'block'
                 this.status = 'Something went wrong!'
             } else if (!token.success()) {
-                const timeleft: number = token.getTimeleft()
-                const mins = Math.floor(timeleft / 60)
-                const seconds = Math.ceil(timeleft % 60)
-
-                let minsText = mins.toString()
-                let secondsText = seconds.toString()
-                if (mins < 10) {
-                    minsText = '0' + minsText
-                }
-                if (seconds < 10) {
-                    secondsText = '0' + secondsText
-                }
-
                 this.statusDisplay = 'block'
-                this.status = 'You already generated a token. Wait 00:' + minsText + ':' + secondsText + ' to generate your next token.'
+                this.timeleft = Math.ceil(token.getTimeleft())
+                this.updateStatus()
+
+                this.timer = Observable.timer(0, 1000).subscribe(() => {
+                    this.timeleft--
+                    if (this.timeleft >= 0) {
+                        this.updateStatus()
+                    }
+                })
             } else {
                 this.tokenDisplay = 'block'
                 this.token = token.getToken()
                 this.password = token.getPassword()
             }
         })
+    }
+
+    updateStatus() {
+        this.status = 'You already generated a token. Wait '
+            + Utils.formatSeconds(this.timeleft) + ' to generate your next token.'
+    }
+
+    ngOnDestroy() {
+        if (this.timer != null) {
+            this.timer.unsubscribe()
+        }
     }
 
     onLogin() {
