@@ -37,6 +37,7 @@ var projectsBlackList = []string{
 // Whitelist for debugging
 // As long it's empty we will accept any repos
 var projectsWhiteList = []string{
+	"AOSPA/android_build",
 }
 
 type AospaProject struct {
@@ -363,7 +364,10 @@ func trackCaf() {
 				// Fetch caf
 				utils.LogI(MANDY_TAG, "Fetching "+aospaProject.Name)
 				err := aospaProject.git.Fetch("caf")
-				utils.Panic(err)
+				if err != nil {
+					utils.LogE(MANDY_TAG, "Failed to fetch "+aospaProject.Name)
+					continue
+				}
 				utils.LogI(MANDY_TAG, "Fetched "+aospaProject.Name)
 
 				var latestTag string = mandyStatus.ManifestTag
