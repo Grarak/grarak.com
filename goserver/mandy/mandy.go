@@ -37,7 +37,6 @@ var projectsBlackList = []string{
 // Whitelist for debugging
 // As long it's empty we will accept any repos
 var projectsWhiteList = []string{
-	"AOSPA/android_build",
 }
 
 type AospaProject struct {
@@ -186,6 +185,7 @@ func startSubmitting() {
 			utils.LogE(MANDY_TAG, "Couldn't pull "+aospaProject.Name+", skipping submission")
 			aospaProject.Conflicted = true
 			successful = false
+			aospaProject.git.RemoveAll()
 			continue
 		}
 
@@ -194,6 +194,7 @@ func startSubmitting() {
 			utils.LogE(MANDY_TAG, "Couldn't merge with origin "+aospaProject.Name+", skipping submission")
 			aospaProject.Conflicted = true
 			successful = false
+			aospaProject.git.RemoveAll()
 			continue
 		}
 	}
@@ -201,6 +202,7 @@ func startSubmitting() {
 	if successful {
 		for _, aospaProject := range mandyStatus.AospaProjects {
 			aospaProject.git.Push("gerrit", "HEAD:refs/heads/"+aospaProject.revision, false)
+			aospaProject.git.RemoveAll()
 		}
 		mandyStatus.Submitted = true
 	} else {
@@ -246,6 +248,7 @@ func startReverting() {
 		} else {
 			aospaProject.git.Push("gerrit", "HEAD:refs/heads/"+MANDY_BRANCH, true)
 		}
+		aospaProject.git.RemoveAll()
 	}
 
 	mandyStatus.Reverting = false
@@ -296,6 +299,7 @@ func startMerging() {
 		} else {
 			// Start merging
 			// The returning status code will tell if it was successful
+			aospaProject.git.Fetch("caf")
 			mergeStatus, err := aospaProject.git.MergeTag(mandyStatus.LatestTag)
 			aospaProject.Conflicted = mergeStatus != 0 || err != nil
 			if aospaProject.Conflicted {
@@ -315,6 +319,7 @@ func startMerging() {
 		if err != nil {
 			utils.LogE(MANDY_TAG, err.Error())
 		}
+		aospaProject.git.RemoveAll()
 	}
 	mandyStatus.Mergeable = false
 	mandyStatus.Merging = false
@@ -694,6 +699,8 @@ func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *Mand
 
 		aospaProject.git.SetName(MANDY_NAME)
 		aospaProject.git.SetEmail(MANDY_EMAIL)
+
+		aospaProject.git.RemoveAll()
 	}
 
 	if initialize && !mandyStatus.killed {

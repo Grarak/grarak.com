@@ -142,6 +142,22 @@ func (git Git) Clean() error {
 	return nil
 }
 
+func (git Git) RemoveAll() error {
+	_, status, err := git.shell.Run([]byte("rm -rf " + git.GetPath() + "/*"))
+	if status != 0 || err != nil {
+		return GitError("Couldn't remove all " + git.path)
+	}
+	return nil
+}
+
+func (git Git) ResetHard() error {
+	_, status, err := git.run("reset --hard")
+	if status != 0 || err != nil {
+		return GitError("Couldn't reset hard " + git.path)
+	}
+	return nil
+}
+
 func (git Git) run(cmd string) ([]byte, int, error) {
 	return git.shell.Run([]byte("git -C " + git.GetPath() + " " + cmd))
 }
