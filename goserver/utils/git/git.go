@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"io/ioutil"
 )
 
 type Git struct {
@@ -143,9 +144,17 @@ func (git Git) Clean() error {
 }
 
 func (git Git) RemoveAll() error {
-	_, status, err := git.shell.Run([]byte("rm -rf " + git.GetPath() + "/*"))
-	if status != 0 || err != nil {
+	path := git.GetPath()
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
 		return GitError("Couldn't remove all " + git.path)
+	}
+	for _, file := range files {
+		if file.IsDir() && (file.Name() == ".git" ||
+			utils.DirExists(path+"/"+file.Name() + "/.git")) {
+			continue
+		}
+		os.Remove(path + "/" + file.Name())
 	}
 	return nil
 }
@@ -171,8 +180,7 @@ func (git Git) Valid() bool {
 }
 
 func (git Git) Exists() bool {
-	_, err := os.Stat(fmt.Sprintf("%s/.git", git.GetPath()))
-	return err == nil
+	return utils.DirExists(git.GetPath() + "/" + ".git")
 }
 
 func (git Git) GetPath() string {
@@ -181,7 +189,7 @@ func (git Git) GetPath() string {
 
 func (git Git) Delete() {
 	path := git.GetPath()
-	if _, err := os.Stat(path); err == nil {
+	if utils.DirExists(path) {
 		os.Remove(path)
 	}
 }

@@ -124,8 +124,8 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
 }
 
 func mkdirs(path string) {
-	if _, err := os.Stat(path); err != nil {
-		err = os.MkdirAll(path, 0755)
+	if utils.DirExists(path) {
+		err := os.MkdirAll(path, 0755)
 		utils.Panic(err)
 	}
 }
