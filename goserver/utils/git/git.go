@@ -150,13 +150,29 @@ func (git Git) RemoveAll() error {
 		return GitError("Couldn't remove all " + git.path)
 	}
 	for _, file := range files {
-		if file.IsDir() && (file.Name() == ".git" ||
-			utils.DirExists(path+"/"+file.Name() + "/.git")) {
+		if hasGitSubdir(path + "/" + file.Name()) {
 			continue
 		}
 		os.Remove(path + "/" + file.Name())
 	}
 	return nil
+}
+
+func hasGitSubdir(filePath string) bool {
+	if filePath == ".git" || utils.DirExists(filePath+"/.git") {
+		return true
+	}
+
+	files, err := ioutil.ReadDir(filePath)
+	if err != nil {
+		return false
+	}
+	for _, file := range files {
+		if hasGitSubdir(filePath + "/" + file.Name()) {
+			return true
+		}
+	}
+	return false
 }
 
 func (git Git) ResetHard() error {
