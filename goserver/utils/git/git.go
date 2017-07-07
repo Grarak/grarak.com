@@ -153,7 +153,7 @@ func (git Git) RemoveAll() error {
 		if hasGitSubdir(path + "/" + file.Name()) {
 			continue
 		}
-		os.Remove(path + "/" + file.Name())
+		os.RemoveAll(path + "/" + file.Name())
 	}
 	return nil
 }
