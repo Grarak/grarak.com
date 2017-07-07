@@ -159,7 +159,7 @@ func (git Git) RemoveAll() error {
 }
 
 func hasGitSubdir(filePath string) bool {
-	if filePath == ".git" || utils.DirExists(filePath+"/.git") {
+	if strings.HasSuffix(filePath, ".git") {
 		return true
 	}
 
