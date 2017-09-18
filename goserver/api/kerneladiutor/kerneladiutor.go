@@ -84,6 +84,26 @@ func (kaApi KernelAdiutorApi) deviceGet() *miniserver.Response {
 				}
 			}
 		}
+	} else if board, boardOk := kaApi.client.Queries["board"]; boardOk {
+		if devices, devicesOk := kaApi.devicedata.Board[board[0]]; devicesOk {
+			responses := make([]kerneladiutor.DeviceInfo, 0)
+			for i := (pageNumber - 1) * 10; i < pageNumber*10; i++ {
+				if i < len(devices) {
+					if device, deviceOk := kaApi.devicedata.Infos[devices[i]]; deviceOk {
+						info := *device
+						info.AndroidID = ""
+						responses = append(responses, info)
+					}
+				}
+			}
+
+			if len(responses) > 0 {
+				jsonBuf, err := json.Marshal(responses)
+				if err == nil {
+					return kaApi.client.ResponseBody(string(jsonBuf))
+				}
+			}
+		}
 	} else {
 		// No specific id
 		// Respond with list based on page
@@ -109,39 +129,20 @@ func (kaApi KernelAdiutorApi) deviceGet() *miniserver.Response {
 }
 
 func (kaApi KernelAdiutorApi) boardGet() *miniserver.Response {
-	if id, idOk := kaApi.client.Queries["id"]; idOk {
-		if devices, boardOk := kaApi.devicedata.Board[id[0]]; boardOk {
-			var deviceIds []string = make([]string, 0)
-
-			for _, device := range devices {
-				deviceIds = append(deviceIds, kaApi.devicedata.Infos[device].ID)
-			}
-
-			if len(deviceIds) > 0 {
-				buf, err := json.Marshal(deviceIds)
-				if err != nil {
-					return nil
-				}
-
-				return kaApi.client.ResponseBody(string(buf))
-			}
+	var boards []string = make([]string, 0)
+	for board, boardList := range kaApi.devicedata.Board {
+		if len(boardList) > 0 {
+			boards = append(boards, board)
 		}
-	} else {
-		var boards []string = make([]string, 0)
-		for board, boardList := range kaApi.devicedata.Board {
-			if len(boardList) > 0 {
-				boards = append(boards, board)
-			}
+	}
+
+	if len(boards) > 0 {
+		buf, err := json.Marshal(boards)
+		if err != nil {
+			return nil
 		}
 
-		if len(boards) > 0 {
-			buf, err := json.Marshal(boards)
-			if err != nil {
-				return nil
-			}
-
-			return kaApi.client.ResponseBody(string(buf))
-		}
+		return kaApi.client.ResponseBody(string(buf))
 	}
 
 	return nil
@@ -195,5 +196,5 @@ func (kaApi KernelAdiutorApi) createStatus(success bool) ([]byte, error) {
 		Version string `json:"version"`
 		Status  int64  `json:"status"`
 	}{success, kaApi.client.Method, kaApi.path,
-	  kaApi.version, int64(statusCode)})
+		kaApi.version, int64(statusCode)})
 }
