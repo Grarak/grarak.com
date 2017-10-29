@@ -20,7 +20,7 @@ const AOSPA_MANIFEST_URL = GITHUB_HTTP + "/AOSPA/manifest.git"
 const MANIFEST_DEFAULT = "default.xml"
 const MANIFEST_AOSPA = "manifests/aospa.xml"
 
-const AOSPA_BRANCH = "nougat-mr2"
+const AOSPA_BRANCH = "oreo"
 const MANDY_BRANCH = AOSPA_BRANCH + "-bot"
 
 const MANDY_USERNAME = "PAMergebot"
