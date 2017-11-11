@@ -40,24 +40,24 @@ var projectsWhiteList = []string{
 }
 
 type AospaProject struct {
-	Path       string `json:"-"`
+	Path       string  `json:"-"`
 	project    Project `json:"-"`
-	revision   string `json:"-"`
-	remote     Remote `json:"-"`
+	revision   string  `json:"-"`
+	remote     Remote  `json:"-"`
 	cafProject Project `json:"-"`
-	cafRemote  Remote `json:"-"`
+	cafRemote  Remote  `json:"-"`
 	git        git.Git `json:"-"`
 
 	Name       string `json:"name"`
 	LatestTag  string `json:"latesttag"`
-	Conflicted bool `json:"conflicted"`
+	Conflicted bool   `json:"conflicted"`
 }
 
 type MandyStatus struct {
-	ManifestTag         string `json:"manifesttag"`
+	ManifestTag         string   `json:"manifesttag"`
 	ManifestTagSplitted []string `json:"-"`
 
-	LatestTag     string `json:"latesttag"`
+	LatestTag     string          `json:"latesttag"`
 	AospaProjects []*AospaProject `json:"projects,omitempty"`
 
 	Mergeable bool `json:"mergeable"`
@@ -74,9 +74,9 @@ type MandyStatus struct {
 	Reverter  User `json:"reverter"`
 
 	Notification   *Notification `json:"-"`
-	firebaseApiKey string `json:"-"`
-	killed         bool `json:"-"`
-	manifestGit    *git.Git `json:"-"`
+	firebaseApiKey string        `json:"-"`
+	killed         bool          `json:"-"`
+	manifestGit    *git.Git      `json:"-"`
 }
 
 type MandyErr string
@@ -498,22 +498,15 @@ func compareTag(tag1, tag2 []string) int {
 		// Returning higher number when tag1 is higher
 		// That means it's a new tag
 		func(tagFrag1, tagFrag2 string) int {
-			if tagFrag1 == tagFrag2 {
-				return 0
-			}
 			num1, err := strconv.Atoi(tagFrag1)
 			if err != nil {
 				return -200
 			}
 			num2, err := strconv.Atoi(tagFrag2)
-
 			if err != nil {
 				return -200
 			}
-			if num2 > num1 {
-				return 100
-			}
-			return -100
+			return num2 - num1
 		},
 
 		genericScore(10), // 89xx
