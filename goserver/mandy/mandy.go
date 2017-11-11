@@ -3,12 +3,12 @@ package mandy
 import (
 	"../utils"
 	"../utils/git"
-	"fmt"
 	"io/ioutil"
 	"time"
 	"strings"
 	"strconv"
 	"encoding/json"
+	"sort"
 )
 
 const MANDY_TAG = "Mandy"
@@ -358,6 +358,11 @@ func trackCaf() {
 		{"5.5", "5.6"},
 	}
 
+	type tagScore struct {
+		name           string
+		score, numDiff int
+	}
+
 	for {
 
 		if !mandyStatus.Merged && !mandyStatus.Submitted && !mandyStatus.Reverting {
@@ -375,43 +380,53 @@ func trackCaf() {
 				}
 				utils.LogI(MANDY_TAG, "Fetched "+aospaProject.Name)
 
-				var latestTag string = mandyStatus.ManifestTag
-				var maxScore int = 0
+				latestTag := mandyStatus.ManifestTag
 				tags, err := aospaProject.git.GetTags()
 				utils.Panic(err)
 
+				allTags := make([]string, len(tags))
+				copy(allTags, tags)
 				for _, tag := range tags {
-					score := compareTag(mandyStatus.ManifestTagSplitted, splitTag(tag))
-					if score >= 400 {
 
-						// Some tags are equivalent
-						// Since caf doesn't update them at the same time
-						// This is need, since some people are impatient.
-						// FUCK YOU ALEX
-						for _, alias := range tagEquivalents {
-							var aliasTag string
-							if strings.Contains(tag, alias.alias1) {
-								aliasTag = strings.Replace(tag, alias.alias1, alias.alias2, 1)
-							} else if strings.Contains(tag, alias.alias2) {
-								aliasTag = strings.Replace(tag, alias.alias2, alias.alias1, 1)
-							}
+					// Some tags are equivalent
+					// Since caf doesn't update them at the same time
+					// This is need, since some people are impatient.
+					// FUCK YOU ALEX
+					for _, alias := range tagEquivalents {
+						var aliasTag string
+						if strings.Contains(tag, alias.alias1) {
+							aliasTag = strings.Replace(tag, alias.alias1, alias.alias2, 1)
+						} else if strings.Contains(tag, alias.alias2) {
+							aliasTag = strings.Replace(tag, alias.alias2, alias.alias1, 1)
+						}
+						if !utils.StringEmpty(aliasTag) {
+							allTags = append(allTags, aliasTag)
+						}
+					}
+				}
 
-							newScore := compareTag(mandyStatus.ManifestTagSplitted, splitTag(aliasTag))
+				var topTags []tagScore
+				for _, tag := range allTags {
+					score, numDiff := compareTag(mandyStatus.ManifestTagSplitted, splitTag(tag))
+					if score >= 515 {
+						topTags = append(topTags, tagScore{tag, score, numDiff})
+					}
+				}
 
-							// Tags with the same score mean that all of them are old
-							// or match the current tag
-							// Tag with single highest score means we found a new usable tag
-							insertScore := func(score int, tag string) {
-								if score >= 525 && score > maxScore {
-									maxScore = score
-									latestTag = tag
-								}
-							}
-							if newScore > score {
-								insertScore(newScore, tag)
-							} else {
-								insertScore(score, tag)
-							}
+				sort.Slice(topTags, func(i, j int) bool {
+					return topTags[i].score > topTags[j].score
+				})
+
+				if len(topTags) > 0 {
+					topScore := topTags[0].score
+					maxScore := 0
+					for _, tag := range topTags {
+						if tag.score != topScore {
+							break
+						}
+						if tag.score+tag.numDiff > maxScore {
+							maxScore = tag.score + tag.numDiff
+							latestTag = tag.name
 						}
 					}
 				}
@@ -474,7 +489,7 @@ func trackCaf() {
 }
 
 // The higher the score, the better the new tag matches
-func compareTag(tag1, tag2 []string) int {
+func compareTag(tag1, tag2 []string) (int, int) {
 
 	genericScore := func(score int) (func(tagFrag1, tagFrag2 string) int) {
 		return func(tagFrag1, tagFrag2 string) int {
@@ -488,6 +503,7 @@ func compareTag(tag1, tag2 []string) int {
 		}
 	}
 
+	var numDiff int
 	scoreTable := []func(tagFrag1, tagFrag2 string) int{
 		genericScore(100), // LA
 		genericScore(100), // UM
@@ -506,7 +522,8 @@ func compareTag(tag1, tag2 []string) int {
 			if err != nil {
 				return -200
 			}
-			return num2 - num1
+			numDiff = num2 - num1
+			return numDiff
 		},
 
 		genericScore(10), // 89xx
@@ -516,16 +533,20 @@ func compareTag(tag1, tag2 []string) int {
 	scoreTablelen := len(scoreTable)
 	tag1len := len(tag1)
 	tag2len := len(tag2)
-	if tag1len != tag2len || tag1len != scoreTablelen || tag2len != scoreTablelen {
-		return -1
+	if tag1len != tag2len || tag1len != scoreTablelen ||
+		tag2len != scoreTablelen {
+		return -1, 0
 	}
 
-	var score = 0
+	score := 0
 	for i := 0; i < scoreTablelen; i++ {
 		score += scoreTable[i](tag1[i], tag2[i])
 	}
 
-	return score
+	if numDiff > 0 {
+		score += 100
+	}
+	return score - numDiff, numDiff
 }
 
 func splitTag(tag string) []string {
@@ -554,11 +575,10 @@ func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *Mand
 
 	if !mandyStatus.manifestGit.Valid() {
 		utils.LogI(MANDY_TAG, "Cloning "+mandyStatus.manifestGit.String())
-		buf, err := mandyStatus.manifestGit.Clone(AOSPA_BRANCH)
+		_, err := mandyStatus.manifestGit.Clone(AOSPA_BRANCH)
 		if err != nil {
 			return mandyStatus
 		}
-		fmt.Println(string(buf))
 
 		utils.LogI(MANDY_TAG, "Successfully cloned "+mandyStatus.manifestGit.String())
 	} else {
