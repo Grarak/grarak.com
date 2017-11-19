@@ -20,6 +20,8 @@ const AOSPA_MANIFEST_URL = GITHUB_HTTP + "/AOSPA/manifest.git"
 const MANIFEST_DEFAULT = "default.xml"
 const MANIFEST_AOSPA = "manifests/aospa.xml"
 
+const CAF_BRANCH = "caf"
+
 const AOSPA_BRANCH = "oreo"
 const MANDY_BRANCH = AOSPA_BRANCH + "-bot"
 
@@ -299,7 +301,7 @@ func startMerging() {
 		} else {
 			// Start merging
 			// The returning status code will tell if it was successful
-			aospaProject.git.Fetch("caf")
+			aospaProject.git.Fetch(CAF_BRANCH)
 			mergeStatus, err := aospaProject.git.MergeTag(mandyStatus.LatestTag)
 			aospaProject.Conflicted = mergeStatus != 0 || err != nil
 			if aospaProject.Conflicted {
@@ -373,7 +375,7 @@ func trackCaf() {
 
 				// Fetch caf
 				utils.LogI(MANDY_TAG, "Fetching "+aospaProject.Name)
-				err := aospaProject.git.Fetch("caf")
+				err := aospaProject.git.Fetch(CAF_BRANCH)
 				if err != nil {
 					utils.LogE(MANDY_TAG, "Failed to fetch "+aospaProject.Name)
 					continue
@@ -632,7 +634,7 @@ func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *Mand
 	var forkedProjects []*AospaProject
 	for _, cafProject := range manifest.Projects {
 		for _, aospaProject := range aospaManifest.Projects {
-			if cafProject.Path == aospaProject.Path {
+			if cafProject.Path == aospaProject.Path && aospaProject.Remote == "aospa" {
 				for _, removedProject := range aospaManifest.RemoveProjects {
 					if cafProject.Name == removedProject.Name && repoAccepted(aospaProject.Name) {
 
@@ -704,7 +706,7 @@ func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *Mand
 		}
 
 		// Add caf remote
-		aospaProject.git.ReplaceRemote("caf",
+		aospaProject.git.ReplaceRemote(CAF_BRANCH,
 			buildGitUrl(aospaProject.cafProject, aospaProject.cafRemote))
 
 		// Add gerrit remote
