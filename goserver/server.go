@@ -22,7 +22,7 @@ import (
 
 const SERVER_TAG = "Server"
 
-var supportedContentTypes [][]string = [][]string{
+var supportedContentTypes = [][]string{
 	{miniserver.ContentJson, ".json"},
 	{miniserver.ContentJavascript, ".js"},
 	{miniserver.ContentHtml, ".htm", ".html", ".shtml"},
@@ -38,9 +38,9 @@ var joDirectData *jodirect.JoDirectData
 
 func onConnect(client *miniserver.Client) *miniserver.Response {
 	var response *miniserver.Response
-	var url string = client.Url[1:]
+	url := client.Url[1:]
 
-	var urls []string = strings.Split(url, "/")
+	urls := strings.Split(url, "/")
 
 	var realPath string
 	// Check if site requests an HTML file
@@ -49,7 +49,7 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
 		if !utils.StringEmpty(urls[i]) &&
 			(utils.DirExists(fmt.Sprintf("dist/%s", urls[i])) ||
 				utils.FileExists(fmt.Sprintf("dist/%s", urls[i]))) {
-			var realPathBuf []string = []string{"dist"}
+			realPathBuf := []string{"dist"}
 			for x := i; x < len(urls); x++ {
 				realPathBuf = append(realPathBuf, urls[x])
 			}
@@ -73,7 +73,7 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
 		typesLoop:
 			for _, contentType := range supportedContentTypes {
 				for i := 1; i < len(contentType); i++ {
-					var extension string = contentType[i]
+					extension := contentType[i]
 					if len(url) > len(extension) &&
 						url[len(url)-len(extension):] == extension {
 						response.SetContentType(contentType[0])
@@ -91,8 +91,8 @@ func onConnect(client *miniserver.Client) *miniserver.Response {
 		if len(urls) >= 4 && urls[1] == "api" && len(realPath) == 0 {
 			var resApi api.Interface
 
-			var path string = strings.Join(urls[3:], "/")
-			var apiVersion string = urls[2]
+			path := strings.Join(urls[3:], "/")
+			apiVersion := urls[2]
 			switch urls[0] {
 			case "kerneladiutor":
 				resApi = api_kerneladiutor.NewKernelAdiutorApi(
@@ -150,7 +150,7 @@ func main() {
 	mkdirs(utils.KERNELADIUTOR)
 	mkdirs(utils.MANDY)
 
-	var server *miniserver.MiniServer = miniserver.NewServer(port)
+	server := miniserver.NewServer(port)
 
 	c := make(chan os.Signal, 1)
 	cleanup := make(chan bool)

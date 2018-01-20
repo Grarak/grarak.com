@@ -11,7 +11,7 @@ import (
 
 type Git struct {
 	parentPath, path, url string
-	shell                 shell.Shell
+	shell                 *shell.Shell
 }
 
 type GitError string
@@ -20,12 +20,12 @@ func (e GitError) Error() string {
 	return string(e)
 }
 
-func NewGit(parentPath, path, url string) Git {
-	return Git{
+func NewGit(parentPath, path, url string, shell *shell.Shell) *Git {
+	return &Git{
 		parentPath,
 		path,
 		url,
-		shell.NewShell(),
+		shell,
 	}
 }
 
@@ -108,7 +108,7 @@ func (git Git) Fetch(remote string) error {
 }
 
 func (git Git) GetTags() ([]string, error) {
-	buf, status, err := git.run("tag")
+	buf, status, err := git.run("--no-pager tag")
 	if err != nil || status != 0 {
 		return nil, err
 	}
@@ -133,14 +133,6 @@ func (git Git) Push(remote, branch string, force bool) (int, error) {
 	}
 	_, status, err := git.run(cmd)
 	return status, err
-}
-
-func (git Git) Clean() error {
-	_, status, err := git.run("clean -d -x -f")
-	if status != 0 || err != nil {
-		return GitError("Couldn't clean " + git.path)
-	}
-	return nil
 }
 
 func (git Git) RemoveAll() error {
@@ -212,8 +204,4 @@ func (git Git) Delete() {
 
 func (git Git) String() string {
 	return git.url
-}
-
-func (git Git) Exit() {
-	git.shell.Exit()
 }

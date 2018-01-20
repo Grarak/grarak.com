@@ -3,6 +3,7 @@ package mandy
 import (
 	"../utils"
 	"../utils/git"
+	"../utils/shell"
 	"io/ioutil"
 	"time"
 	"strings"
@@ -42,13 +43,13 @@ var projectsWhiteList = []string{
 }
 
 type AospaProject struct {
-	Path       string  `json:"-"`
-	project    Project `json:"-"`
-	revision   string  `json:"-"`
-	remote     Remote  `json:"-"`
-	cafProject Project `json:"-"`
-	cafRemote  Remote  `json:"-"`
-	git        git.Git `json:"-"`
+	Path       string   `json:"-"`
+	project    Project  `json:"-"`
+	revision   string   `json:"-"`
+	remote     Remote   `json:"-"`
+	cafProject Project  `json:"-"`
+	cafRemote  Remote   `json:"-"`
+	git        *git.Git `json:"-"`
 
 	Name       string `json:"name"`
 	LatestTag  string `json:"latesttag"`
@@ -56,11 +57,10 @@ type AospaProject struct {
 }
 
 type MandyStatus struct {
-	ManifestTag         string   `json:"manifesttag"`
-	ManifestTagSplitted []string `json:"-"`
+	ManifestTag string `json:"manifesttag"`
 
 	LatestTag     string          `json:"latesttag"`
-	AospaProjects []*AospaProject `json:"projects,omitempty"`
+	AospaProjects []*AospaProject `json:"projects"`
 
 	Mergeable bool `json:"mergeable"`
 	Merging   bool `json:"merging"`
@@ -79,6 +79,8 @@ type MandyStatus struct {
 	firebaseApiKey string        `json:"-"`
 	killed         bool          `json:"-"`
 	manifestGit    *git.Git      `json:"-"`
+
+	shell *shell.Shell `json:"-"`
 }
 
 type MandyErr string
@@ -94,8 +96,8 @@ func repoAccepted(repo string) bool {
 		(len(projectsWhiteList) == 0 || utils.SliceContains(repo, projectsWhiteList))
 }
 
-func newMandyGit(path, url string) git.Git {
-	return git.NewGit("mandy", path, url)
+func (mandyStatus *MandyStatus) newMandyGit(path, url string) *git.Git {
+	return git.NewGit("mandy", path, url, mandyStatus.shell)
 }
 
 func buildGitUrl(project Project, remote Remote) string {
@@ -116,16 +118,16 @@ func saveMandyStatus() {
 	utils.Panic(err)
 }
 
-func getMandyStatus() MandyStatus {
+func getMandyStatus() *MandyStatus {
 	buf, err := ioutil.ReadFile(utils.MANDY + "/status.json")
 	if err != nil {
-		return MandyStatus{}
+		return &MandyStatus{}
 	}
 
-	var mandyStatus MandyStatus
+	var mandyStatus *MandyStatus
 	err = json.Unmarshal(buf, &mandyStatus)
 	if err != nil {
-		return MandyStatus{}
+		return &MandyStatus{}
 	}
 
 	return mandyStatus
@@ -134,10 +136,7 @@ func getMandyStatus() MandyStatus {
 func (mandyStatus *MandyStatus) Kill() {
 	if mandyStatus != nil {
 		mandyStatus.killed = true
-		for _, aospaProject := range mandyStatus.AospaProjects {
-			aospaProject.git.Exit()
-		}
-		mandyStatus.manifestGit.Exit()
+		mandyStatus.shell.Exit()
 	}
 }
 
@@ -317,7 +316,6 @@ func startMerging() {
 
 		aospaProject.git.Push("gerrit", "HEAD:refs/heads/"+MANDY_BRANCH, true)
 
-		err = aospaProject.git.Clean()
 		if err != nil {
 			utils.LogE(MANDY_TAG, err.Error())
 		}
@@ -409,7 +407,7 @@ func trackCaf() {
 
 				var topTags []tagScore
 				for _, tag := range allTags {
-					score, numDiff := compareTag(mandyStatus.ManifestTagSplitted, splitTag(tag))
+					score, numDiff := compareTag(splitTag(mandyStatus.ManifestTag), splitTag(tag))
 					if score >= 515 {
 						topTags = append(topTags, tagScore{tag, score, numDiff})
 					}
@@ -435,7 +433,7 @@ func trackCaf() {
 
 				if latestTag != mandyStatus.ManifestTag {
 					if !mandyStatus.Mergeable && !mandyStatus.Merged && !mandyStatus.Submitting {
-						var mergable bool = true
+						mergable := true
 						// Check if other repos have the tag as well
 						for _, aospaProject := range mandyStatus.AospaProjects {
 							if latestTag != aospaProject.LatestTag {
@@ -454,7 +452,9 @@ func trackCaf() {
 					}
 					aospaProject.LatestTag = latestTag
 
-					if latestTag != mandyStatus.LatestTag {
+					_, latestProjectTagNumDiff := compareTag(splitTag(mandyStatus.ManifestTag), splitTag(latestTag))
+					_, latestTagNumDiff := compareTag(splitTag(mandyStatus.ManifestTag), splitTag(mandyStatus.LatestTag))
+					if latestTag != mandyStatus.LatestTag && latestProjectTagNumDiff > latestTagNumDiff {
 						utils.LogI(MANDY_TAG, "New tag found "+latestTag)
 						mandyStatus.LatestTag = latestTag
 						mandyStatus.Notification.Notify(NOTIFICATION_NEW_TAG_FOUND,
@@ -465,7 +465,6 @@ func trackCaf() {
 					saveMandyStatus()
 				}
 
-				err = aospaProject.git.Clean()
 				if err != nil {
 					utils.LogE(MANDY_TAG, err.Error())
 				}
@@ -564,16 +563,14 @@ func splitTag(tag string) []string {
 
 func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *MandyStatus {
 	if mandyStatus == nil {
-		mandyStatus = &MandyStatus{}
-		*mandyStatus = getMandyStatus()
-		mandyStatus.Notification = NewNotification(firebaseApiKey, userdata)
-	}
+		mandyStatus = getMandyStatus()
 
-	if mandyStatus.manifestGit == nil {
-		mandyStatus.manifestGit = &git.Git{}
-		*mandyStatus.manifestGit = newMandyGit(AOSPA_MANIFEST_NAME, AOSPA_MANIFEST_URL)
+		mandyStatus.Notification = NewNotification(firebaseApiKey, userdata)
+		mandyStatus.firebaseApiKey = firebaseApiKey
+
+		mandyStatus.shell = shell.NewShell()
+		mandyStatus.manifestGit = mandyStatus.newMandyGit(AOSPA_MANIFEST_NAME, AOSPA_MANIFEST_URL)
 	}
-	mandyStatus.firebaseApiKey = firebaseApiKey
 
 	if !mandyStatus.manifestGit.Valid() {
 		utils.LogI(MANDY_TAG, "Cloning "+mandyStatus.manifestGit.String())
@@ -588,10 +585,6 @@ func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *Mand
 		if err != nil {
 			return mandyStatus
 		}
-	}
-	err := mandyStatus.manifestGit.Clean()
-	if err != nil {
-		utils.LogE(MANDY_TAG, err.Error())
 	}
 
 	manifestDefaultBuf, err := ioutil.ReadFile(mandyStatus.manifestGit.GetPath() + "/" + MANIFEST_DEFAULT)
@@ -626,7 +619,6 @@ func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *Mand
 	}
 
 	mandyStatus.ManifestTag = newManifestTag
-	mandyStatus.ManifestTagSplitted = splitTag(mandyStatus.ManifestTag)
 
 	// Determinate our forked projects
 	// Basically if the path equals it means we forked it
@@ -660,7 +652,7 @@ func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *Mand
 								remote,
 								cafProject,
 								cafRemote,
-								newMandyGit(aospaProject.Path,
+								mandyStatus.newMandyGit(aospaProject.Path,
 									buildGitUrl(aospaProject, remote)),
 								aospaProject.Name,
 								mandyStatus.ManifestTag,
@@ -680,9 +672,6 @@ func MandyInit(initialize bool, firebaseApiKey string, userdata *UserData) *Mand
 				// Make sure we don't lose information
 				forkedProject.LatestTag = aospaProject.LatestTag
 				forkedProject.Conflicted = aospaProject.Conflicted
-
-				// Also exit shell
-				aospaProject.git.Exit()
 				break
 			}
 		}

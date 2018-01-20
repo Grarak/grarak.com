@@ -24,7 +24,7 @@ type Shell struct {
 	exit, running bool
 }
 
-func NewShell() Shell {
+func NewShell() *Shell {
 	cmd := exec.Command("sh")
 
 	writer, err := cmd.StdinPipe()
@@ -38,15 +38,15 @@ func NewShell() Shell {
 	}
 
 	cmd.Start()
-	return Shell{cmd, writer, reader,
-				 false, false}
+	return &Shell{cmd, writer, reader,
+		false, false}
 }
 
-func (sh Shell) Run(cmd []byte) ([]byte, int, error) {
+func (sh *Shell) Run(cmd []byte) ([]byte, int, error) {
 	if sh.exit {
 		return nil, -1, ShellErr("Shell is killed")
 	}
-	(&sh).running = true
+	sh.running = true
 	callback := "/shellcallback/"
 	_, err := io.WriteString(sh.writer,
 		fmt.Sprintf("%s\necho $?%s\n", string(cmd), callback))
@@ -57,7 +57,7 @@ func (sh Shell) Run(cmd []byte) ([]byte, int, error) {
 
 	read := bufio.NewReader(sh.reader)
 	output := make([]string, 0)
-	var status int = -1
+	status := -1
 	for {
 		buf, _, err := read.ReadLine()
 		if err != nil {
@@ -73,25 +73,27 @@ func (sh Shell) Run(cmd []byte) ([]byte, int, error) {
 		}
 		output = append(output, string(buf))
 	}
-	(&sh).running = false
+	sh.running = false
 	return []byte(strings.Join(output, "\n")), status, nil
 }
 
-func (sh Shell) kill() {
+func (sh *Shell) kill() {
 	sh.cmd.Process.Kill()
 	sh.writer.Close()
 	sh.reader.Close()
 }
 
-func (sh Shell) Exit() {
-	(&sh).exit = true
+func (sh *Shell) Exit() {
+	sh.exit = true
 	for sh.running {
 		time.Sleep(time.Second / 3)
 	}
 	if sh.writer != nil {
 		io.WriteString(sh.writer, "exit\n")
 
-		sh.cmd.Process.Wait()
+		if sh.cmd != nil {
+			sh.cmd.Process.Wait()
+		}
 		sh.kill()
 	}
 }
