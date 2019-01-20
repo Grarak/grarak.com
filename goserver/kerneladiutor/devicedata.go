@@ -24,7 +24,7 @@ type DeviceData struct {
 
 	newDevices []*DeviceInfo
 
-	lock sync.Mutex
+	Lock sync.Mutex
 }
 
 func NewDeviceData() *DeviceData {
@@ -70,7 +70,7 @@ func NewDeviceData() *DeviceData {
 	// So we sort new devices one after one
 	go func() {
 		for {
-			dData.lock.Lock()
+			dData.Lock.Lock()
 
 			if len(dData.newDevices) > 0 {
 				newDevice := dData.newDevices[0]
@@ -100,7 +100,7 @@ func NewDeviceData() *DeviceData {
 				dData.newDevices = dData.newDevices[1:]
 			}
 
-			dData.lock.Unlock()
+			dData.Lock.Unlock()
 			time.Sleep(time.Second / 3)
 		}
 	}()
@@ -156,8 +156,8 @@ func (dData DeviceData) findDevice(newDevice *DeviceInfo, sortedList []string) (
 }
 
 func (dData *DeviceData) UpdateDevice(dInfo *DeviceInfo) {
-	dData.lock.Lock()
-	defer dData.lock.Unlock()
+	dData.Lock.Lock()
+	defer dData.Lock.Unlock()
 
 	j, err := dInfo.Json()
 	utils.Panic(err)

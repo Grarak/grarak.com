@@ -1,12 +1,12 @@
 package mandy
 
 import (
-	"net/http"
-	"encoding/json"
-	"bytes"
-	"../utils"
 	"../miniserver"
+	"../utils"
+	"bytes"
+	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"time"
 )
@@ -101,7 +101,7 @@ func (notification *Notification) Notify(notificationCode MandyNotification, dat
 				continue
 			}
 
-			var client *http.Client = &http.Client{}
+			var client = &http.Client{}
 			response, err := client.Do(request)
 			if err != nil {
 				utils.LogE(MANDY_TAG, "Can't send notification to "+user.Name)

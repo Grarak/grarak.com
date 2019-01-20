@@ -2,8 +2,8 @@ package utils
 
 import (
 	"encoding/base64"
-	"os"
 	"fmt"
+	"os"
 )
 
 const SERVERDATA = "./serverdata"
@@ -119,7 +119,7 @@ func FromURLBase64(text string) ([]byte, error) {
 }
 
 func InsertToSlice(item string, slice []string, index int) []string {
-	var buf []string = make([]string, len(slice)+1)
+	var buf = make([]string, len(slice)+1)
 	copy(buf, slice[:index])
 	buf[index] = item
 	copy(buf[index+1:], slice[index:])
@@ -128,9 +128,11 @@ func InsertToSlice(item string, slice []string, index int) []string {
 }
 
 func RemoveFromSlice(slice []string, index int) []string {
-	var buf []string = make([]string, len(slice)-1)
+	var buf = make([]string, len(slice)-1)
 	copy(buf, slice[:index])
-	copy(buf[index:], slice[index+1:])
+	if index+1 < len(slice) {
+		copy(buf[index:], slice[index+1:])
+	}
 
 	return buf
 }

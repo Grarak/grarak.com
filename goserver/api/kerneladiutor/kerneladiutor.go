@@ -62,6 +62,9 @@ func (kaApi KernelAdiutorApi) deviceCreate() *miniserver.Response {
 }
 
 func (kaApi KernelAdiutorApi) deviceGet() *miniserver.Response {
+	kaApi.devicedata.Lock.Lock()
+	defer kaApi.devicedata.Lock.Unlock()
+
 	var pageNumber = 1
 	if pageQuery, pageQueryok := kaApi.client.Queries["page"]; pageQueryok {
 		if num, err := strconv.Atoi(pageQuery[0]); err == nil {
