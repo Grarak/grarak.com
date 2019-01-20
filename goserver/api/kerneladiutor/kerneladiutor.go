@@ -49,7 +49,7 @@ func (kaApi KernelAdiutorApi) deviceCreate() *miniserver.Response {
 		return nil
 	}
 
-	var dInfo *kerneladiutor.DeviceInfo = kerneladiutor.NewDeviceInfo(data, true)
+	var dInfo = kerneladiutor.NewDeviceInfo(data, true)
 	if dInfo.Valid() {
 
 		kaApi.devicedata.UpdateDevice(dInfo)
@@ -62,7 +62,7 @@ func (kaApi KernelAdiutorApi) deviceCreate() *miniserver.Response {
 }
 
 func (kaApi KernelAdiutorApi) deviceGet() *miniserver.Response {
-	var pageNumber int = 1
+	var pageNumber = 1
 	if pageQuery, pageQueryok := kaApi.client.Queries["page"]; pageQueryok {
 		if num, err := strconv.Atoi(pageQuery[0]); err == nil {
 			if num > 0 {
@@ -76,7 +76,7 @@ func (kaApi KernelAdiutorApi) deviceGet() *miniserver.Response {
 		realId, err := utils.Decode(id[0])
 		if err == nil {
 			if value, valueOk := kaApi.devicedata.Infos[string(realId)]; valueOk {
-				var info kerneladiutor.DeviceInfo = *value
+				var info = *value
 				info.AndroidID = ""
 				jsonBuf, err := json.Marshal(info)
 				if err == nil {
@@ -111,7 +111,7 @@ func (kaApi KernelAdiutorApi) deviceGet() *miniserver.Response {
 		for i := (pageNumber - 1) * 10; i < pageNumber*10; i++ {
 			if i < len(kaApi.devicedata.SortedScores) {
 				if value, valueOk := kaApi.devicedata.Infos[kaApi.devicedata.SortedScores[i]]; valueOk {
-					var info kerneladiutor.DeviceInfo = *value
+					var info = *value
 					info.AndroidID = ""
 					responses = append(responses, info)
 				}
@@ -129,7 +129,7 @@ func (kaApi KernelAdiutorApi) deviceGet() *miniserver.Response {
 }
 
 func (kaApi KernelAdiutorApi) boardGet() *miniserver.Response {
-	var boards []string = make([]string, 0)
+	var boards = make([]string, 0)
 	for board, boardList := range kaApi.devicedata.Board {
 		if len(boardList) > 0 {
 			boards = append(boards, board)
@@ -150,7 +150,7 @@ func (kaApi KernelAdiutorApi) boardGet() *miniserver.Response {
 
 func (kaApi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 	var response *miniserver.Response
-	var silentStatusCode bool = false
+	var silentStatusCode = false
 
 	if silentcodeQuery, silentcodeQueryok := kaApi.client.Queries["silent"]; silentcodeQueryok {
 		silentStatusCode = silentcodeQuery[0] == "true"
@@ -185,7 +185,7 @@ func (kaApi KernelAdiutorApi) kernelAdiutorApiv1() *miniserver.Response {
 }
 
 func (kaApi KernelAdiutorApi) createStatus(success bool) ([]byte, error) {
-	var statusCode int = http.StatusOK
+	var statusCode = http.StatusOK
 	if !success {
 		statusCode = http.StatusNotFound
 	}

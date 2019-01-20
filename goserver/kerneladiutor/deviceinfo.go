@@ -1,9 +1,9 @@
 package kerneladiutor
 
 import (
-	"time"
-	"encoding/json"
 	"../utils"
+	"encoding/json"
+	"time"
 )
 
 type DeviceInfo struct {
@@ -25,9 +25,9 @@ type DeviceInfo struct {
 }
 
 func NewDeviceInfo(data map[string]interface{}, post bool) *DeviceInfo {
-	var j utils.Json = utils.Json{data}
+	var j = utils.Json{data}
 
-	var dInfo *DeviceInfo = &DeviceInfo{
+	var dInfo = &DeviceInfo{
 		ID:             j.GetString("id"),
 		AndroidID:      j.GetString("android_id"),
 		AndroidVersion: j.GetString("android_version"),

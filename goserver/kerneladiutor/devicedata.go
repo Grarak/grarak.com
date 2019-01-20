@@ -3,14 +3,15 @@ package kerneladiutor
 import (
 	"database/sql"
 	"encoding/json"
+	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 
 	"fmt"
 
 	"../utils"
-	"time"
 	"sort"
+	"time"
 )
 
 type DeviceData struct {
@@ -22,6 +23,8 @@ type DeviceData struct {
 	Board map[string][]string
 
 	newDevices []*DeviceInfo
+
+	lock sync.Mutex
 }
 
 func NewDeviceData() *DeviceData {
@@ -36,11 +39,11 @@ func NewDeviceData() *DeviceData {
 	}
 
 	dData := &DeviceData{
-		db,
-		getDevices(db),
-		make([]string, 0),
-		make(map[string][]string, 0),
-		make([]*DeviceInfo, 0),
+		db:           db,
+		Infos:        getDevices(db),
+		SortedScores: make([]string, 0),
+		Board:        make(map[string][]string, 0),
+		newDevices:   make([]*DeviceInfo, 0),
 	}
 
 	for key := range dData.Infos {
@@ -54,9 +57,9 @@ func NewDeviceData() *DeviceData {
 	// Extract all existing board names
 	// Use already sorted list, so we don't have to sort it afterwards
 	for _, id := range dData.SortedScores {
-		var device *DeviceInfo = dData.Infos[id]
+		var device = dData.Infos[id]
 
-		var boardDevices []string = dData.Board[device.Board]
+		var boardDevices = dData.Board[device.Board]
 		if boardDevices == nil {
 			boardDevices = make([]string, 0)
 		}
@@ -67,6 +70,8 @@ func NewDeviceData() *DeviceData {
 	// So we sort new devices one after one
 	go func() {
 		for {
+			dData.lock.Lock()
+
 			if len(dData.newDevices) > 0 {
 				newDevice := dData.newDevices[0]
 
@@ -95,6 +100,7 @@ func NewDeviceData() *DeviceData {
 				dData.newDevices = dData.newDevices[1:]
 			}
 
+			dData.lock.Unlock()
 			time.Sleep(time.Second / 3)
 		}
 	}()
@@ -103,7 +109,7 @@ func NewDeviceData() *DeviceData {
 }
 
 func (dData DeviceData) insertDevice(newDevice *DeviceInfo, sortedList []string) []string {
-	var index int = 0
+	var index = 0
 	var err error
 
 	// Remove the old position in sorted list
@@ -150,6 +156,8 @@ func (dData DeviceData) findDevice(newDevice *DeviceInfo, sortedList []string) (
 }
 
 func (dData *DeviceData) UpdateDevice(dInfo *DeviceInfo) {
+	dData.lock.Lock()
+	defer dData.lock.Unlock()
 
 	j, err := dInfo.Json()
 	utils.Panic(err)
