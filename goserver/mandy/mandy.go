@@ -23,7 +23,7 @@ const MANIFEST_AOSPA = "manifests/aospa.xml"
 
 const CAF_BRANCH = "caf"
 
-const AOSPA_BRANCH = "pie"
+const AOSPA_BRANCH = "quartz"
 const MANDY_BRANCH = AOSPA_BRANCH + "-bot"
 
 const MANDY_USERNAME = "PAMergebot"
