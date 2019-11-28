@@ -32,7 +32,7 @@ func NewGit(parentPath, path, url string, shell *shell.Shell) *Git {
 func (git Git) Clone(branch string) ([]byte, error) {
 	git.Delete()
 	buf, status, err := git.shell.Run([]byte(fmt.Sprintf(
-		"git clone %s -b %s %s", git.url, branch, git.GetPath())))
+		"git clone %s --depth 1 -b %s --single-branch %s", git.url, branch, git.GetPath())))
 	if status != 0 {
 		return buf, GitError("Cloning " + git.String() + " failed")
 	}
